@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"route256/checkout/internal/clients/loms"
 	"route256/checkout/internal/clients/productservice"
+	"route256/checkout/internal/config"
 	"route256/checkout/internal/domain"
 	"route256/checkout/internal/handlers/addtocart"
 	"route256/checkout/internal/handlers/deletefromcart"
@@ -20,11 +21,16 @@ const port = ":8080"
 //Сервис отвечает за корзину и оформление заказа.
 
 func main() {
+	err := config.Init()
+	if err != nil {
+		log.Fatal("config init", err)
+	}
+
 	router := httprouter.New()
 
-	lomsClient := loms.New("http://127.0.0.1:8081")
+	lomsClient := loms.New(config.ConfigData.Services.Loms)
 
-	productServiceClient := productservice.New("http://route256.pavl.uk:8080", "testtoken")
+	productServiceClient := productservice.New(config.ConfigData.Services.Product, config.ConfigData.Token)
 	businessLogic := domain.New(lomsClient, productServiceClient)
 
 	addToCartHandler := addtocart.New(businessLogic)
@@ -38,6 +44,6 @@ func main() {
 	router.Handler(http.MethodPost, "/purchase", srvwrapper.New(purchaseHandler.Handle))
 
 	log.Println("listening http at", port)
-	err := http.ListenAndServe(port, router)
+	err = http.ListenAndServe(port, router)
 	log.Fatal("cannot listen http", err)
 }
