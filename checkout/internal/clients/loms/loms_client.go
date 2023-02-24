@@ -1,14 +1,9 @@
 package loms
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
-	"net/http"
 	"route256/checkout/internal/domain"
-
-	"github.com/pkg/errors"
+	"route256/libs/clientwrapper"
 )
 
 type Client struct {
@@ -40,31 +35,9 @@ type StocksResponse struct {
 
 func (c *Client) Stocks(ctx context.Context, sku uint32) ([]domain.Stock, error) {
 	request := StocksRequest{SKU: sku}
-
-	rawJSON, err := json.Marshal(request)
-	if err != nil {
-		return nil, errors.Wrap(err, "marshaling json")
-	}
-
-	httpRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, c.urlStocks, bytes.NewBuffer(rawJSON))
-	if err != nil {
-		return nil, errors.Wrap(err, "creating http request")
-	}
-
-	httpResponse, err := http.DefaultClient.Do(httpRequest)
-	if err != nil {
-		return nil, errors.Wrap(err, "calling http")
-	}
-	defer httpResponse.Body.Close()
-
-	if httpResponse.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("wrong status code: %d", httpResponse.StatusCode)
-	}
-
 	var response StocksResponse
-	err = json.NewDecoder(httpResponse.Body).Decode(&response)
-	if err != nil {
-		return nil, errors.Wrap(err, "decoding json")
+	if err := clientwrapper.New(request, &response, c.urlStocks).DoRequest(ctx); err != nil {
+		return nil, err
 	}
 
 	stocks := make([]domain.Stock, 0, len(response.Stocks))
@@ -92,31 +65,10 @@ func (c *Client) CreateOrder(ctx context.Context, user int64, items []domain.Ord
 		User:  user,
 		Items: items,
 	}
-
-	rawJSON, err := json.Marshal(request)
-	if err != nil {
-		return 0, errors.Wrap(err, "marshaling json")
-	}
-
-	httpRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, c.urlCreateOrder, bytes.NewBuffer(rawJSON))
-	if err != nil {
-		return 0, errors.Wrap(err, "creating http request")
-	}
-
-	httpResponse, err := http.DefaultClient.Do(httpRequest)
-	if err != nil {
-		return 0, errors.Wrap(err, "calling http")
-	}
-	defer httpResponse.Body.Close()
-
-	if httpResponse.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("wrong status code: %d", httpResponse.StatusCode)
-	}
-
 	var response CreateOrderResponse
-	err = json.NewDecoder(httpResponse.Body).Decode(&response)
-	if err != nil {
-		return 0, errors.Wrap(err, "decoding json")
+
+	if err := clientwrapper.New(request, &response, c.urlCreateOrder).DoRequest(ctx); err != nil {
+		return 0, err
 	}
 
 	return response.OrderID, nil

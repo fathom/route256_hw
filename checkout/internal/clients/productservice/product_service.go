@@ -1,12 +1,8 @@
 package productservice
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
-	"github.com/pkg/errors"
-	"net/http"
+	"route256/libs/clientwrapper"
 )
 
 //Swagger развернут по адресу: http://route256.pavl.uk:8080/docs/
@@ -45,34 +41,12 @@ func (c *Client) GetProduct(ctx context.Context, sku uint32) (string, uint32, er
 		Token: c.token,
 		SKU:   sku,
 	}
-
-	rawJSON, err := json.Marshal(request)
-	if err != nil {
-		return "", 0, errors.Wrap(err, "marshaling json")
+	var response ProductResponse
+	if err := clientwrapper.New(request, &response, c.urlGetProduct).DoRequest(ctx); err != nil {
+		return "", 0, err
 	}
 
-	httpRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, c.urlGetProduct, bytes.NewBuffer(rawJSON))
-	if err != nil {
-		return "", 0, errors.Wrap(err, "creating http request")
-	}
-
-	httpResponse, err := http.DefaultClient.Do(httpRequest)
-	if err != nil {
-		return "", 0, errors.Wrap(err, "calling http")
-	}
-	defer httpResponse.Body.Close()
-
-	if httpResponse.StatusCode != http.StatusOK {
-		return "", 0, fmt.Errorf("wrong status code: %d", httpResponse.StatusCode)
-	}
-
-	var serviceResponse ProductResponse
-	err = json.NewDecoder(httpResponse.Body).Decode(&serviceResponse)
-	if err != nil {
-		return "", 0, errors.Wrap(err, "decoding json")
-	}
-
-	return serviceResponse.Name, serviceResponse.Price, nil
+	return response.Name, response.Price, nil
 }
 
 type ListRequest struct {
@@ -91,32 +65,10 @@ func (c *Client) ListSkus(ctx context.Context, startAfterSku, count uint32) ([]u
 		StartAfterSku: startAfterSku,
 		Count:         count,
 	}
-
-	rawJSON, err := json.Marshal(request)
-	if err != nil {
-		return nil, errors.Wrap(err, "marshaling json")
+	var response ListResponse
+	if err := clientwrapper.New(request, &response, c.urlListSkus).DoRequest(ctx); err != nil {
+		return nil, err
 	}
 
-	httpRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, c.urlListSkus, bytes.NewBuffer(rawJSON))
-	if err != nil {
-		return nil, errors.Wrap(err, "creating http request")
-	}
-
-	httpResponse, err := http.DefaultClient.Do(httpRequest)
-	if err != nil {
-		return nil, errors.Wrap(err, "calling http")
-	}
-	defer httpResponse.Body.Close()
-
-	if httpResponse.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("wrong status code: %d", httpResponse.StatusCode)
-	}
-
-	var serviceResponse ListResponse
-	err = json.NewDecoder(httpResponse.Body).Decode(&serviceResponse)
-	if err != nil {
-		return nil, errors.Wrap(err, "decoding json")
-	}
-
-	return serviceResponse.Skus, nil
+	return response.Skus, nil
 }
