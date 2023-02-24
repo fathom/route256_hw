@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/julienschmidt/httprouter"
 	"log"
 	"net/http"
 	"route256/checkout/internal/clients/loms"
@@ -13,6 +12,8 @@ import (
 	"route256/checkout/internal/handlers/listcart"
 	"route256/checkout/internal/handlers/purchase"
 	"route256/libs/srvwrapper"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 const port = ":8080"

@@ -1,11 +1,12 @@
 package config
 
 import (
+	"log"
+	"os"
+
 	"github.com/caarlos0/env/v6"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
-	"log"
-	"os"
 )
 
 type ConfigStruct struct {

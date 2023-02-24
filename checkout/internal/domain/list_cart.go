@@ -2,8 +2,9 @@ package domain
 
 import (
 	"context"
-	"github.com/pkg/errors"
 	"log"
+
+	"github.com/pkg/errors"
 )
 
 type CartItem struct {

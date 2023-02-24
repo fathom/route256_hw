@@ -2,8 +2,9 @@ package domain
 
 import (
 	"context"
-	"github.com/pkg/errors"
 	"log"
+
+	"github.com/pkg/errors"
 )
 
 func (m *Domain) Purchase(ctx context.Context, user int64) error {
