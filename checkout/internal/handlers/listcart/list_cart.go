@@ -11,11 +11,15 @@ import (
 //Показать список товаров в корзине с именами и ценами (их надо в реальном
 //времени получать из ProductService)
 
-type Handler struct {
-	businessLogic *domain.Domain
+type BusinessLogic interface {
+	ListCart(context.Context, int64) ([]domain.CartItem, error)
 }
 
-func New(businessLogic *domain.Domain) *Handler {
+type Handler struct {
+	businessLogic BusinessLogic
+}
+
+func New(businessLogic BusinessLogic) *Handler {
 	return &Handler{
 		businessLogic: businessLogic,
 	}

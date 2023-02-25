@@ -4,18 +4,21 @@ import (
 	"context"
 	"errors"
 	"log"
-	"route256/checkout/internal/domain"
 )
 
 //addToCart
 //Добавить товар в корзину определенного пользователя. При этом надо
 //проверить наличие товара через LOMS.stocks
 
-type Handler struct {
-	businessLogic *domain.Domain
+type BusinessLogic interface {
+	AddToCart(context.Context, int64, uint32, uint16) error
 }
 
-func New(businessLogic *domain.Domain) *Handler {
+type Handler struct {
+	businessLogic BusinessLogic
+}
+
+func New(businessLogic BusinessLogic) *Handler {
 	return &Handler{
 		businessLogic: businessLogic,
 	}

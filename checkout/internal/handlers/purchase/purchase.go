@@ -4,17 +4,20 @@ import (
 	"context"
 	"errors"
 	"log"
-	"route256/checkout/internal/domain"
 )
 
 //purchase
 //Оформить заказ по всем товарам корзины. Вызывает createOrder у LOMS.
 
-type Handler struct {
-	businessLogic *domain.Domain
+type BusinessLogic interface {
+	Purchase(context.Context, int64) error
 }
 
-func New(businessLogic *domain.Domain) *Handler {
+type Handler struct {
+	businessLogic BusinessLogic
+}
+
+func New(businessLogic BusinessLogic) *Handler {
 	return &Handler{
 		businessLogic: businessLogic,
 	}

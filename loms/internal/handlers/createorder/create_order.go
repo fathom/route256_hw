@@ -10,8 +10,18 @@ import (
 //Создает новый заказ для пользователя из списка переданных товаров.
 //Товары при этом нужно зарезервировать на складе.
 
+type BusinessLogic interface {
+	CreateOrder(context.Context, int64, []domain.OrderItem) (int64, error)
+}
+
 type Handler struct {
-	businessLogic *domain.Domain
+	businessLogic BusinessLogic
+}
+
+func New(businessLogic BusinessLogic) *Handler {
+	return &Handler{
+		businessLogic: businessLogic,
+	}
 }
 
 type Request struct {
@@ -25,12 +35,6 @@ type Response struct {
 
 func (r Request) Validate() error {
 	return nil
-}
-
-func New(businessLogic *domain.Domain) *Handler {
-	return &Handler{
-		businessLogic: businessLogic,
-	}
 }
 
 func (h *Handler) Handle(ctx context.Context, request Request) (Response, error) {
