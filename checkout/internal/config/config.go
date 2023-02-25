@@ -10,13 +10,14 @@ import (
 )
 
 type ConfigStruct struct {
-	Token    string         `yaml:"token" env:"TOKEN" envDefault:"testtoken"`
+	Token    string         `yaml:"token" env:"TOKEN"`
+	AppPort  string         `yaml:"app_port" env:"APP_PORT"`
 	Services ConfigServices `yaml:"services"`
 }
 
 type ConfigServices struct {
-	Loms    string `yaml:"loms" env:"LOMS_URL" envDefault:""`
-	Product string `yaml:"product" env:"PRODUCT_URL" envDefault:""`
+	Loms    string `yaml:"loms" env:"LOMS_URL"`
+	Product string `yaml:"product" env:"PRODUCT_URL"`
 }
 
 var ConfigData ConfigStruct

@@ -16,8 +16,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-const port = ":8080"
-
 //Checkout
 //Сервис отвечает за корзину и оформление заказа.
 
@@ -44,7 +42,7 @@ func main() {
 	router.Handler(http.MethodPost, "/listCart", srvwrapper.New(listCartHandler.Handle))
 	router.Handler(http.MethodPost, "/purchase", srvwrapper.New(purchaseHandler.Handle))
 
-	log.Println("listening http at", port)
-	err = http.ListenAndServe(port, router)
+	log.Println("listening http at", config.ConfigData.AppPort)
+	err = http.ListenAndServe(config.ConfigData.AppPort, router)
 	log.Fatal("cannot listen http", err)
 }
