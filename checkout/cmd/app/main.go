@@ -1,19 +1,18 @@
 package main
 
 import (
+	"fmt"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
 	"log"
-	"net/http"
-	"route256/checkout/internal/clients/loms"
-	"route256/checkout/internal/clients/productservice"
+	"net"
+	CheckoutV1 "route256/checkout/internal/api/checkout_v1"
+	LomsClient "route256/checkout/internal/clients/grpc/loms_client"
+	ProductClient "route256/checkout/internal/clients/grpc/product_client"
 	"route256/checkout/internal/config"
 	"route256/checkout/internal/domain"
-	"route256/checkout/internal/handlers/addtocart"
-	"route256/checkout/internal/handlers/deletefromcart"
-	"route256/checkout/internal/handlers/listcart"
-	"route256/checkout/internal/handlers/purchase"
-	"route256/libs/srvwrapper"
-
-	"github.com/julienschmidt/httprouter"
+	desc "route256/checkout/pkg/checkout_v1"
 )
 
 //Checkout
@@ -25,24 +24,36 @@ func main() {
 		log.Fatal("config init", err)
 	}
 
-	router := httprouter.New()
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", config.ConfigData.GrpcPort))
+	if err != nil {
+		log.Fatalf("failed start listen: %v", err)
+	}
 
-	lomsClient := loms.New(config.ConfigData.Services.Loms)
+	s := grpc.NewServer()
+	reflection.Register(s)
 
-	productServiceClient := productservice.New(config.ConfigData.Services.Product, config.ConfigData.Token)
+	lomsConn, err := grpc.Dial(config.ConfigData.Services.Loms, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("failed connect to server: %v", err)
+	}
+	defer lomsConn.Close()
+
+	lomsClient := LomsClient.New(lomsConn)
+
+	productConn, err := grpc.Dial(config.ConfigData.Services.Product, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("failed connect to server: %v", err)
+	}
+	defer productConn.Close()
+
+	productServiceClient := ProductClient.New(productConn, config.ConfigData.Token)
+
 	businessLogic := domain.New(lomsClient, productServiceClient)
 
-	addToCartHandler := addtocart.New(businessLogic)
-	deleteFromCartHandler := deletefromcart.New()
-	listCartHandler := listcart.New(businessLogic)
-	purchaseHandler := purchase.New(businessLogic)
+	desc.RegisterCheckoutV1Server(s, CheckoutV1.NewCheckoutV1(businessLogic))
+	log.Printf("grpc server listening at %v port", config.ConfigData.GrpcPort)
 
-	router.Handler(http.MethodPost, "/addToCart", srvwrapper.New(addToCartHandler.Handle))
-	router.Handler(http.MethodPost, "/deleteFromCart", srvwrapper.New(deleteFromCartHandler.Handle))
-	router.Handler(http.MethodPost, "/listCart", srvwrapper.New(listCartHandler.Handle))
-	router.Handler(http.MethodPost, "/purchase", srvwrapper.New(purchaseHandler.Handle))
-
-	log.Println("listening http at", config.ConfigData.AppPort)
-	err = http.ListenAndServe(config.ConfigData.AppPort, router)
-	log.Fatal("cannot listen http", err)
+	if err = s.Serve(lis); err != nil {
+		log.Fatalf("failed start serve: %v", err)
+	}
 }

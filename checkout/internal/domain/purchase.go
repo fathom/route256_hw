@@ -3,21 +3,22 @@ package domain
 import (
 	"context"
 	"log"
+	"route256/checkout/internal/model"
 
 	"github.com/pkg/errors"
 )
 
-func (m *Domain) Purchase(ctx context.Context, user int64) error {
+func (s *domain) Purchase(ctx context.Context, user int64) error {
 	log.Printf("CreateOrder for user: %+v", user)
 
-	items := []OrderItem{
+	items := []*model.OrderItem{
 		{1076963, 1},
 		{1148162, 1},
 		{1625903, 1},
 		{2618151, 1},
 	}
 
-	orderID, err := m.lomsService.CreateOrder(ctx, user, items)
+	orderID, err := s.lomsService.CreateOrder(ctx, user, items)
 	if err != nil {
 		return errors.WithMessage(err, "failed create order")
 	}

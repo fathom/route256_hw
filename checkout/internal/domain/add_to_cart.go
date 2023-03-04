@@ -6,20 +6,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-type Stock struct {
-	WarehouseID int64
-	Count       uint64
-}
-
 var (
 	ErrInsufficientStocks = errors.New("insufficient stocks")
 )
 
-func (m *Domain) AddToCart(ctx context.Context, user int64, sku uint32, count uint16) error {
+func (s *domain) AddToCart(ctx context.Context, user int64, sku uint32, count uint32) error {
 
 	_ = user
 
-	stocks, err := m.lomsService.Stocks(ctx, sku)
+	stocks, err := s.lomsService.Stocks(ctx, sku)
 	if err != nil {
 		return errors.WithMessage(err, "checking stocks")
 	}
