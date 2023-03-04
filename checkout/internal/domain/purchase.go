@@ -12,10 +12,10 @@ func (s *domain) Purchase(ctx context.Context, user int64) error {
 	log.Printf("CreateOrder for user: %+v", user)
 
 	items := []*model.OrderItem{
-		{1076963, 1},
-		{1148162, 1},
-		{1625903, 1},
-		{2618151, 1},
+		{Sku: 1076963, Count: 1},
+		{Sku: 1148162, Count: 1},
+		{Sku: 1625903, Count: 1},
+		{Sku: 2618151, Count: 1},
 	}
 
 	orderID, err := s.lomsService.CreateOrder(ctx, user, items)

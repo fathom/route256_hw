@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
 	CheckoutV1 "route256/checkout/internal/api/checkout_v1"
@@ -13,6 +10,10 @@ import (
 	"route256/checkout/internal/config"
 	"route256/checkout/internal/domain"
 	desc "route256/checkout/pkg/checkout_v1"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
 )
 
 //Checkout

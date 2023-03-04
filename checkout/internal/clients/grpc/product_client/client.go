@@ -2,9 +2,10 @@ package loms_client
 
 import (
 	"context"
-	"google.golang.org/grpc"
 	"route256/checkout/internal/domain"
 	desc "route256/checkout/pkg/product"
+
+	"google.golang.org/grpc"
 )
 
 var _ domain.ProductService = &client{}
