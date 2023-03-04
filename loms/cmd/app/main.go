@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	LomsV1 "route256/loms/internal/api/loms_v1"
+	"route256/loms/internal/config"
 	"route256/loms/internal/domain"
 	desc "route256/loms/pkg/loms_v1"
 
@@ -15,10 +16,13 @@ import (
 //LOMS (Logistics and Order Management System)
 //Сервис отвечает за учет заказов и логистику.
 
-const grpcPort = 50051
-
 func main() {
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", grpcPort))
+	err := config.Init()
+	if err != nil {
+		log.Fatal("config init", err)
+	}
+
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", config.ConfigData.GrpcPort))
 	if err != nil {
 		log.Fatalf("failed start listen: %v", err)
 	}
@@ -30,7 +34,7 @@ func main() {
 
 	desc.RegisterLomsV1Server(s, LomsV1.NewLomsV1(businessLogic))
 
-	log.Printf("grpc server listening at %v port", grpcPort)
+	log.Printf("grpc server listening at %v port", config.ConfigData.GrpcPort)
 
 	if err = s.Serve(lis); err != nil {
 		log.Fatalf("failed start serve: %v", err)
