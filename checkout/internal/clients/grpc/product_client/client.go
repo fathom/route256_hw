@@ -3,7 +3,7 @@ package loms_client
 import (
 	"context"
 	"route256/checkout/internal/domain"
-	desc "route256/checkout/pkg/product"
+	desc "route256/product_service/pkg/product_service"
 
 	"google.golang.org/grpc"
 )
