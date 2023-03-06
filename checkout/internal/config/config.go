@@ -11,7 +11,7 @@ import (
 
 type ConfigStruct struct {
 	Token    string         `yaml:"token" env:"TOKEN"`
-	AppPort  string         `yaml:"app_port" env:"APP_PORT"`
+	GrpcPort string         `yaml:"grpc_port" env:"GRPC_PORT"`
 	Services ConfigServices `yaml:"services"`
 }
 

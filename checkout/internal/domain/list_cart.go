@@ -9,12 +9,12 @@ import (
 
 type CartItem struct {
 	Scu   uint32
-	Count uint16
+	Count uint32
 	Name  string
 	Price uint32
 }
 
-func (m *Domain) ListCart(ctx context.Context, user int64) ([]CartItem, error) {
+func (s *domain) ListCart(ctx context.Context, user int64) ([]CartItem, error) {
 	log.Printf("listCart for user: %+v", user)
 
 	userCart := []CartItem{
@@ -25,7 +25,7 @@ func (m *Domain) ListCart(ctx context.Context, user int64) ([]CartItem, error) {
 	}
 
 	for i := range userCart {
-		name, price, err := m.productService.GetProduct(ctx, userCart[i].Scu)
+		name, price, err := s.productService.GetProduct(ctx, userCart[i].Scu)
 		if err != nil {
 			return nil, errors.WithMessage(err, "wrong sku")
 		}
