@@ -7,9 +7,9 @@ import (
 	desc "route256/loms/pkg/loms_v1"
 )
 
-//createOrder
-//Создает новый заказ для пользователя из списка переданных товаров.
-//Товары при этом нужно зарезервировать на складе.
+// createOrder
+// Создает новый заказ для пользователя из списка переданных товаров.
+// Товары при этом нужно зарезервировать на складе.
 
 func (h *Handlers) CreateOrder(ctx context.Context, request *desc.CreateOrderRequest) (*desc.CreateOrderResponse, error) {
 	log.Printf("createOrder: %+v", request)

@@ -69,3 +69,11 @@ generate:
 	--go-grpc_out=pkg/loms_v1 --go-grpc_opt=paths=source_relative \
 	--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
 	api/loms_v1/service.proto
+
+DATABASE_URL=postgres://postgres:secret@localhost:50431/loms?sslmode=disable
+
+migrate-up:
+	goose -dir ./migrations postgres "$(DATABASE_URL)" up
+
+migrate-status:
+	goose -dir ./migrations postgres "$(DATABASE_URL)" status

@@ -8,11 +8,16 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-//cancelOrder
-//Отменяет заказ, снимает резерв со всех товаров в заказе.
+// cancelOrder
+// Отменяет заказ, снимает резерв со всех товаров в заказе.
 
-func (h *Handlers) CancelOrder(_ context.Context, request *desc.CancelOrderRequest) (*emptypb.Empty, error) {
+func (h *Handlers) CancelOrder(ctx context.Context, request *desc.CancelOrderRequest) (*emptypb.Empty, error) {
 	log.Printf("cancelOrder: %+v", request)
+
+	err := h.businessLogic.CancelOrder(ctx, request.GetOrderId())
+	if err != nil {
+		return nil, err
+	}
 
 	return &emptypb.Empty{}, nil
 }
