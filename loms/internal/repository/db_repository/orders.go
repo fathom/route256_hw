@@ -25,7 +25,11 @@ func (r *OrdersRepository) GetOrder(ctx context.Context, orderId int64) (model.O
 	db := r.QueryEngineProvider.GetQueryEngine(ctx)
 
 	query, args, err := sq.
-		Select("status", "user_id", "created_at", "updated_at").
+		Select(
+			"status",
+			"user_id",
+			"created_at",
+			"updated_at").
 		From(ordersTable).
 		Where(sq.Eq{"order_id": orderId}).
 		PlaceholderFormat(sq.Dollar).
@@ -42,7 +46,7 @@ func (r *OrdersRepository) GetOrder(ctx context.Context, orderId int64) (model.O
 
 	return model.Order{
 		OrderID:   orderId,
-		Status:    model.OrderStatus(order.Status),
+		Status:    model.OrderStatus(order.Status.String),
 		UserID:    order.UserID.Int,
 		CreatedAt: order.CreatedAt.Time,
 		UpdatedAt: order.UpdatedAt.Time,
@@ -54,7 +58,11 @@ func (r *OrdersRepository) CreateOrder(ctx context.Context, order model.Order) (
 
 	query, args, err := sq.
 		Insert(ordersTable).
-		Columns("status", "user_id", "created_at", "updated_at").
+		Columns(
+			"status",
+			"user_id",
+			"created_at",
+			"updated_at").
 		Values(order.Status, order.UserID, time.Now(), time.Now()).
 		Suffix("RETURNING order_id").
 		PlaceholderFormat(sq.Dollar).

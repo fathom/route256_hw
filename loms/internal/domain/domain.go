@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"route256/loms/internal/model"
+	"time"
 )
 
 type OrdersRepository interface {
@@ -16,6 +17,14 @@ type OrderItemsRepository interface {
 	GetItemsByOrderId(context.Context, int64) ([]model.OrderItem, error)
 }
 
+type WarehouseRepository interface {
+	GetStocksBySku(ctx context.Context, sku uint32) ([]model.StockItem, error)
+	UpdateWarehouse(ctx context.Context, sku uint32, warehouseId int64, count uint32) error
+	AddReservation(ctx context.Context, sku uint32, warehouseId int64, orderId int64, count uint32, expiredAt time.Time) error
+	DeleteReservation(ctx context.Context, orderId int64) error
+	GetReservationByOrderId(ctx context.Context, orderId int64) ([]model.StockReservationItem, error)
+}
+
 type TransactionManager interface {
 	RunRepeatableRead(ctx context.Context, f func(ctxTX context.Context) error) error
 	// todo RunSerializable()
@@ -27,16 +36,19 @@ type Domain struct {
 	TransactionManager
 	OrdersRepository
 	OrderItemsRepository
+	WarehouseRepository
 }
 
 func New(
-	TransactionManager TransactionManager,
-	OrdersRepository OrdersRepository,
-	OrderItemsRepository OrderItemsRepository,
+	transactionManager TransactionManager,
+	ordersRepository OrdersRepository,
+	orderItemsRepository OrderItemsRepository,
+	warehouseRepository WarehouseRepository,
 ) *Domain {
 	return &Domain{
-		TransactionManager,
-		OrdersRepository,
-		OrderItemsRepository,
+		transactionManager,
+		ordersRepository,
+		orderItemsRepository,
+		warehouseRepository,
 	}
 }

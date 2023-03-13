@@ -12,7 +12,11 @@ func (d *Domain) CancelOrder(ctx context.Context, orderId int64) error {
 		return err
 	}
 	log.Printf("order %v mark as %v", orderId, model.Cancelled)
-	// todo снимает резерв со всех товаров в заказе
+
+	err = d.WarehouseRepository.DeleteReservation(ctx, orderId)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

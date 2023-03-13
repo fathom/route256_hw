@@ -30,7 +30,7 @@ create table if not exists orders_items
 
 create table if not exists warehouse
 (
-    warehouse_id bigserial
+    warehouse_id serial
         constraint warehouse_pk
             primary key
 );
@@ -48,6 +48,25 @@ create table if not exists warehouse_stocks
 create index if not exists warehouse_id_index
     on warehouse (warehouse_id);
 
+create table if not exists warehouse_reservations
+(
+    sku          bigint,
+    warehouse_id integer,
+    order_id     bigint,
+    count        integer,
+    expired_at   timestamp,
+    constraint warehouse_reservations_pk
+        primary key (sku, warehouse_id, order_id)
+);
+
+create index warehouse_reservations_expired_at_index
+    on warehouse_reservations (expired_at);
+
+create index warehouse_reservations_order_id_index
+    on warehouse_reservations (order_id);
+
+
+
 -- +goose StatementEnd
 
 -- +goose Down
@@ -56,4 +75,5 @@ drop table if exists orders;
 drop table if exists orders_items;
 drop table if exists warehouse;
 drop table if exists warehouse_stocks;
+drop table if exists warehouse_reservations;
 -- +goose StatementEnd

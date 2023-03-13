@@ -43,11 +43,13 @@ func main() {
 	tm := transactor.NewTransactionManager(dbpool)
 	ordersRepo := db.NewOrdersRepository(tm)
 	orderItemsRepo := db.NewOrderItemsRepository(tm)
+	warehouseRepo := db.NewWarehouseRepository(tm)
 
 	businessLogic := domain.New(
 		tm,
 		ordersRepo,
 		orderItemsRepo,
+		warehouseRepo,
 	)
 
 	desc.RegisterLomsV1Server(s, LomsV1.NewLomsV1(businessLogic))

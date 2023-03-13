@@ -23,8 +23,8 @@ func (h *Handlers) Stocks(ctx context.Context, request *desc.StocksRequest) (*de
 
 	for _, item := range items {
 		stocks = append(stocks, &desc.StockItem{
-			WarehouseId: item.WarehouseId,
-			Count:       item.Count,
+			WarehouseId: item.WarehouseID,
+			Count:       uint64(item.Count),
 		})
 	}
 

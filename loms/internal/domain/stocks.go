@@ -9,13 +9,20 @@ func (d *Domain) Stocks(ctx context.Context, sku uint32) ([]model.StockItem, err
 
 	var result []model.StockItem
 
-	result = append(result, model.StockItem{
-		WarehouseId: 1,
-		Count:       50,
-	}, model.StockItem{
-		WarehouseId: 2,
-		Count:       10,
-	})
+	stocks, err := d.WarehouseRepository.GetStocksBySku(ctx, sku)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, stock := range stocks {
+		count := stock.Count - stock.Reservation
+		if count > 0 {
+			result = append(result, model.StockItem{
+				WarehouseID: stock.WarehouseID,
+				Count:       count,
+			})
+		}
+	}
 
 	return result, nil
 }

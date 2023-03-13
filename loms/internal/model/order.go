@@ -12,7 +12,7 @@ type Order struct {
 
 type OrderItem struct {
 	Sku     uint32
-	OrderId int64
+	OrderID int64
 	Count   uint32
 	Price   uint32
 }

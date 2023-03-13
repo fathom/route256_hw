@@ -31,7 +31,7 @@ func (r *OrderItemsRepository) CreateItem(ctx context.Context, item model.OrderI
 			"count",
 			"price",
 		).
-		Values(item.Sku, item.OrderId, item.Count, item.Price).
+		Values(item.Sku, item.OrderID, item.Count, item.Price).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
@@ -71,7 +71,7 @@ func (r *OrderItemsRepository) GetItemsByOrderId(ctx context.Context, orderId in
 		}
 		result = append(result, model.OrderItem{
 			Sku:     uint32(item.Sku.Int),
-			OrderId: orderId,
+			OrderID: orderId,
 			Count:   uint32(item.Count.Int),
 			Price:   uint32(item.Price.Exp),
 		})
