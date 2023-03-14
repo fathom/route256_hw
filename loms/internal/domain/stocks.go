@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"log"
 	"route256/loms/internal/model"
 )
 
@@ -23,6 +24,8 @@ func (d *Domain) Stocks(ctx context.Context, sku uint32) ([]model.StockItem, err
 			})
 		}
 	}
+
+	log.Printf("Stocks available for %v", sku)
 
 	return result, nil
 }

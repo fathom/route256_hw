@@ -8,21 +8,33 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (s *domain) Purchase(ctx context.Context, user int64) error {
-	log.Printf("CreateOrder for user: %+v", user)
+func (d *domain) Purchase(ctx context.Context, userID int64) error {
+	log.Printf("CreateOrder for user: %+v", userID)
 
-	items := []*model.OrderItem{
-		{Sku: 1076963, Count: 1},
-		{Sku: 1148162, Count: 1},
-		{Sku: 1625903, Count: 1},
-		{Sku: 2618151, Count: 1},
+	userCart, err := d.cartRepository.ListCart(ctx, userID)
+	if err != nil {
+		return err
 	}
 
-	orderID, err := s.lomsService.CreateOrder(ctx, user, items)
+	var items []*model.OrderItem
+
+	for _, item := range userCart {
+		items = append(items, &model.OrderItem{
+			Sku:   item.Sku,
+			Count: item.Count,
+		})
+	}
+
+	orderID, err := d.lomsService.CreateOrder(ctx, userID, items)
 	if err != nil {
 		return errors.WithMessage(err, "failed create order")
 	}
 	log.Printf("Created Order: %+v", orderID)
+
+	err = d.cartRepository.DeleteUserCart(ctx, userID)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	sq "github.com/Masterminds/squirrel"
 	"log"
 	"route256/loms/internal/model"
 	"route256/loms/internal/repository/db_repository/schema"
 	"route256/loms/internal/repository/db_repository/transactor"
 	"time"
+
+	sq "github.com/Masterminds/squirrel"
 )
 
 type WarehouseRepository struct {
@@ -22,7 +23,6 @@ func NewWarehouseRepository(provider transactor.QueryEngineProvider) *WarehouseR
 	}
 }
 
-const warehouseTable = "warehouse"
 const warehouseStocksTable = "warehouse_stocks"
 const warehouseReservationsTable = "warehouse_reservations"
 

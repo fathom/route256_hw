@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 	"net"
 	LomsV1 "route256/loms/internal/api/loms_v1"
@@ -13,6 +12,7 @@ import (
 	"route256/loms/internal/repository/db_repository/transactor"
 	desc "route256/loms/pkg/loms_v1"
 
+	"github.com/jackc/pgx/v4/pgxpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )

@@ -2,10 +2,11 @@ package db_repository
 
 import (
 	"context"
-	sq "github.com/Masterminds/squirrel"
 	"route256/loms/internal/model"
 	"route256/loms/internal/repository/db_repository/schema"
 	"route256/loms/internal/repository/db_repository/transactor"
+
+	sq "github.com/Masterminds/squirrel"
 )
 
 type OrderItemsRepository struct {
@@ -34,6 +35,9 @@ func (r *OrderItemsRepository) CreateItem(ctx context.Context, item model.OrderI
 		Values(item.Sku, item.OrderID, item.Count, item.Price).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
+	if err != nil {
+		return err
+	}
 
 	_, err = db.Exec(ctx, query, args...)
 	if err != nil {
@@ -55,6 +59,9 @@ func (r *OrderItemsRepository) GetItemsByOrderId(ctx context.Context, orderId in
 		Where(sq.Eq{"order_id": orderId}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
+	if err != nil {
+		return nil, err
+	}
 
 	var item schema.OrderItem
 	var result []model.OrderItem

@@ -80,7 +80,7 @@ func (d *Domain) CreateOrder(ctx context.Context, user int64, items []*model.Ord
 			}
 
 			if item.Count > 0 {
-				return errors.New(fmt.Sprintf("reservation failed item %v", item.Sku))
+				return fmt.Errorf("reservation failed item %v", item.Sku)
 			}
 		}
 

@@ -2,11 +2,12 @@ package db_repository
 
 import (
 	"context"
-	sq "github.com/Masterminds/squirrel"
 	"route256/loms/internal/model"
 	"route256/loms/internal/repository/db_repository/schema"
 	"route256/loms/internal/repository/db_repository/transactor"
 	"time"
+
+	sq "github.com/Masterminds/squirrel"
 )
 
 type OrdersRepository struct {
