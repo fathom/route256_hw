@@ -26,7 +26,11 @@ func (d *Domain) OrderPayed(ctx context.Context, orderId int64) error {
 		}
 
 		for _, r := range reservations {
-			err := d.WarehouseRepository.UpdateWarehouse(ctxTX, r.Sku, r.WarehouseID, r.Count)
+			stocks, err := d.WarehouseRepository.GetStocks(ctxTX, r.Sku, r.WarehouseID)
+			if err != nil {
+				return err
+			}
+			err = d.WarehouseRepository.UpdateWarehouse(ctxTX, r.Sku, r.WarehouseID, stocks.Count-r.Count)
 			if err != nil {
 				return err
 			}

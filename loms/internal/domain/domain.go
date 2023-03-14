@@ -23,6 +23,7 @@ type WarehouseRepository interface {
 	AddReservation(ctx context.Context, sku uint32, warehouseId int64, orderId int64, count uint32, expiredAt time.Time) error
 	DeleteReservation(ctx context.Context, orderId int64) error
 	GetReservationByOrderId(ctx context.Context, orderId int64) ([]model.StockReservationItem, error)
+	GetStocks(ctx context.Context, sku uint32, warehouseId int64) (model.StockItem, error)
 }
 
 type TransactionManager interface {

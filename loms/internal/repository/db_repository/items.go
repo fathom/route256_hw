@@ -63,6 +63,7 @@ func (r *OrderItemsRepository) GetItemsByOrderId(ctx context.Context, orderId in
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		err = rows.Scan(&item.Sku, &item.Count, &item.Price)

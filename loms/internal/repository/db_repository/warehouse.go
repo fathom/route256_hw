@@ -2,6 +2,7 @@ package db_repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"log"
@@ -24,6 +25,10 @@ func NewWarehouseRepository(provider transactor.QueryEngineProvider) *WarehouseR
 const warehouseTable = "warehouse"
 const warehouseStocksTable = "warehouse_stocks"
 const warehouseReservationsTable = "warehouse_reservations"
+
+var (
+	ErrNotFoundFailed = errors.New("not found")
+)
 
 func (r *WarehouseRepository) GetStocksBySku(ctx context.Context, sku uint32) ([]model.StockItem, error) {
 	db := r.QueryEngineProvider.GetQueryEngine(ctx)
@@ -52,6 +57,7 @@ func (r *WarehouseRepository) GetStocksBySku(ctx context.Context, sku uint32) ([
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		err = rows.Scan(&item.WarehouseID, &item.Count, &item.Reservation)
@@ -66,6 +72,46 @@ func (r *WarehouseRepository) GetStocksBySku(ctx context.Context, sku uint32) ([
 	}
 
 	return result, nil
+}
+
+func (r *WarehouseRepository) GetStocks(ctx context.Context, sku uint32, warehouseId int64) (model.StockItem, error) {
+	db := r.QueryEngineProvider.GetQueryEngine(ctx)
+
+	query, args, err := sq.
+		Select(
+			"sku",
+			"warehouse_id",
+			"count",
+		).
+		From(warehouseStocksTable).
+		Where(sq.Eq{"sku": sku}).
+		Where(sq.Eq{"warehouse_id": warehouseId}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return model.StockItem{}, err
+	}
+
+	log.Printf("GetStocks Query: %v with %v", query, args)
+	rows, err := db.Query(ctx, query, args...)
+	if err != nil {
+		return model.StockItem{}, err
+	}
+	defer rows.Close()
+
+	var item schema.WarehouseStocks
+	if rows.Next() {
+		err = rows.Scan(&item.Sku, &item.WarehouseID, &item.Count)
+		if err != nil {
+			return model.StockItem{}, err
+		}
+		return model.StockItem{
+			WarehouseID: int64(item.WarehouseID.Int),
+			Count:       uint32(item.Count.Int),
+		}, nil
+	}
+
+	return model.StockItem{}, ErrNotFoundFailed
 }
 
 func (r *WarehouseRepository) UpdateWarehouse(ctx context.Context, sku uint32, warehouseId int64, count uint32) error {
@@ -116,6 +162,7 @@ func (r *WarehouseRepository) GetReservationByOrderId(ctx context.Context, order
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		err = rows.Scan(&item.Sku, &item.WarehouseID, &item.Count)
