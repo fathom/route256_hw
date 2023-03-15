@@ -6,9 +6,9 @@ import (
 	desc "route256/checkout/pkg/checkout_v1"
 )
 
-//listCart
-//Показать список товаров в корзине с именами и ценами (их надо в реальном
-//времени получать из ProductService)
+// listCart
+// Показать список товаров в корзине с именами и ценами (их надо в реальном
+// времени получать из ProductService)
 
 func (h *Handlers) ListCart(ctx context.Context, request *desc.ListCartRequest) (*desc.ListCartResponse, error) {
 	log.Printf("listCart: %+v", request)
@@ -22,7 +22,7 @@ func (h *Handlers) ListCart(ctx context.Context, request *desc.ListCartRequest) 
 
 	for _, item := range cartItems {
 		response.Items = append(response.Items, &desc.Product{
-			Sku:   item.Scu,
+			Sku:   item.Sku,
 			Count: item.Count,
 			Name:  item.Name,
 			Price: item.Price,

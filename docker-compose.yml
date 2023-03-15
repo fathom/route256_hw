@@ -1,17 +1,93 @@
-version: "3.1"
+version: "3.7"
+
+networks:
+  route256:
+    driver: bridge
+
 services:
+
   checkout:
+    container_name: 'checkout-app'
     image: checkout
+    environment:
+      DATABASE_URL: postgres://postgres:secret@checkout-db:5432/checkout?sslmode=disable
     build: ./checkout/
     ports:
-      - "8080:8080"
+      - "50052:50052"
+    restart: unless-stopped
+    networks:
+      - route256
+    # почему-то не резолвит route256.pavl.uk, поэтому прописал dns
+    dns:
+      - 8.8.8.8
+    depends_on:
+      - checkout-db
+
+  checkout-db:
+    container_name: 'checkout-db'
+    image: postgres:15.1
+    environment:
+      POSTGRES_DB: checkout
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - checkout-db-data:/var/lib/postgresql/data
+    ports:
+      - "50432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d checkout" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - route256
+
   loms:
+    container_name: 'loms-app'
     image: loms
     build: ./loms/
+    environment:
+      DATABASE_URL: postgres://postgres:secret@loms-db:5432/loms?sslmode=disable
+      GRPC_PORT: 50051
     ports:
-      - "8081:8081"
+      - "50051:50051"
+    restart: unless-stopped
+    networks:
+      - route256
+    depends_on:
+      - loms-db
+
+  loms-db:
+    image: postgres:15.1
+    container_name: 'loms-db'
+    environment:
+      POSTGRES_DB: loms
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - loms-db-data:/var/lib/postgresql/data
+    ports:
+      - "50431:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d loms" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - route256
+
   # notification:
   #   image: notification
   #   build: ./notification
   #   ports:
   #     - "8082:8082"
+
+volumes:
+  checkout-db-data:
+  loms-db-data:

@@ -3,29 +3,21 @@ package domain
 import (
 	"context"
 	"log"
+	"route256/checkout/internal/model"
 
 	"github.com/pkg/errors"
 )
 
-type CartItem struct {
-	Scu   uint32
-	Count uint32
-	Name  string
-	Price uint32
-}
+func (d *domain) ListCart(ctx context.Context, userID int64) ([]model.CartItem, error) {
+	log.Printf("listCart for user: %+v", userID)
 
-func (s *domain) ListCart(ctx context.Context, user int64) ([]CartItem, error) {
-	log.Printf("listCart for user: %+v", user)
-
-	userCart := []CartItem{
-		{1076963, 1, "", 0},
-		{1148162, 1, "", 0},
-		{1625903, 1, "", 0},
-		{2618151, 1, "", 0},
+	userCart, err := d.cartRepository.ListCart(ctx, userID)
+	if err != nil {
+		return nil, err
 	}
 
 	for i := range userCart {
-		name, price, err := s.productService.GetProduct(ctx, userCart[i].Scu)
+		name, price, err := d.productService.GetProduct(ctx, userCart[i].Sku)
 		if err != nil {
 			return nil, errors.WithMessage(err, "wrong sku")
 		}
