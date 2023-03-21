@@ -27,7 +27,11 @@ func (d *domain) ListCart(ctx context.Context, userID int64) ([]model.CartItem, 
 	// Колбэк для обработки задания
 	callback := func(cartItem model.CartItem) (model.CartItem, error) {
 		log.Printf("gorutine GetProduct start: %+v", cartItem.Sku)
-		limiter.Wait(ctx)
+		err := limiter.Wait(ctx)
+		if err != nil {
+			return model.CartItem{}, err
+		}
+
 		log.Printf("gorutine GetProduct make request: %+v", cartItem.Sku)
 		cartItem.Name, cartItem.Price, err = d.productService.GetProduct(ctx, cartItem.Sku)
 		if err != nil {
