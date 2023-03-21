@@ -10,10 +10,11 @@ import (
 )
 
 type ConfigStruct struct {
-	Token       string         `yaml:"token" env:"TOKEN"`
-	GrpcPort    string         `yaml:"grpc_port" env:"GRPC_PORT"`
-	DatabaseURL string         `yaml:"database_url" env:"DATABASE_URL"`
-	Services    ConfigServices `yaml:"services"`
+	Token        string         `yaml:"token" env:"TOKEN"`
+	GrpcPort     string         `yaml:"grpc_port" env:"GRPC_PORT"`
+	DatabaseURL  string         `yaml:"database_url" env:"DATABASE_URL"`
+	CountWorkers int            `yaml:"count_workers" env:"COUNT_WORKERS"`
+	Services     ConfigServices `yaml:"services"`
 }
 
 type ConfigServices struct {

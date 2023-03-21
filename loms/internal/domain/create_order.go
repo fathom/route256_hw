@@ -96,5 +96,10 @@ func (d *Domain) CreateOrder(ctx context.Context, user int64, items []*model.Ord
 		return 0, ErrReservationFailed
 	}
 
+	err = d.OrdersRepository.UpdateStatusOrder(ctx, orderId, model.AwaitingPayment)
+	if err != nil {
+		return 0, err
+	}
+
 	return orderId, nil
 }
