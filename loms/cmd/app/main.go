@@ -10,6 +10,7 @@ import (
 	"route256/loms/internal/domain"
 	db "route256/loms/internal/repository/db_repository"
 	"route256/loms/internal/repository/db_repository/transactor"
+	"route256/loms/internal/worker"
 	desc "route256/loms/pkg/loms_v1"
 
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -19,6 +20,8 @@ import (
 
 // LOMS (Logistics and Order Management System)
 // Сервис отвечает за учет заказов и логистику.
+
+const amountWorkers = 5
 
 func main() {
 	err := config.Init()
@@ -34,7 +37,9 @@ func main() {
 	s := grpc.NewServer()
 	reflection.Register(s)
 
-	dbpool, err := pgxpool.Connect(context.Background(), config.ConfigData.DatabaseURL)
+	ctx := context.Background()
+
+	dbpool, err := pgxpool.Connect(ctx, config.ConfigData.DatabaseURL)
 	if err != nil {
 		log.Fatalf("Unable to create connection pool: %v\n", err)
 	}
@@ -45,11 +50,19 @@ func main() {
 	orderItemsRepo := db.NewOrderItemsRepository(tm)
 	warehouseRepo := db.NewWarehouseRepository(tm)
 
+	drw := worker.NewDeleteReservationWorker(
+		ctx,
+		amountWorkers,
+		ordersRepo,
+		warehouseRepo,
+	)
+
 	businessLogic := domain.New(
 		tm,
 		ordersRepo,
 		orderItemsRepo,
 		warehouseRepo,
+		drw,
 	)
 
 	desc.RegisterLomsV1Server(s, LomsV1.NewLomsV1(businessLogic))

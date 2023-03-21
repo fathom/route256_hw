@@ -77,7 +77,7 @@ func (d *domain) ListCart(ctx context.Context, userID int64) ([]model.CartItem, 
 
 		log.Printf("start wait result from ResultChan")
 		for cartItem := range pool.ResultChan {
-			log.Printf("reseived result: %+v", cartItem.Sku)
+			log.Printf("received result: %+v", cartItem.Sku)
 			outputCart = append(outputCart, cartItem)
 		}
 	}()

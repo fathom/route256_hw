@@ -101,5 +101,10 @@ func (d *Domain) CreateOrder(ctx context.Context, user int64, items []*model.Ord
 		return 0, err
 	}
 
+	// Отправляем отложенную задачу на удаление заказа
+	d.DeleteReservationWorker.AddDelayJob(model.JobDeleteReservation{
+		OrderId: orderId,
+	})
+
 	return orderId, nil
 }
