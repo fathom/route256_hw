@@ -15,3 +15,7 @@ type StockReservationItem struct {
 	Count       uint32
 	ExpiredAt   time.Time
 }
+
+type JobDeleteReservation struct {
+	OrderId int64
+}

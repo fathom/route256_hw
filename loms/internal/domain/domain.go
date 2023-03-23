@@ -26,6 +26,10 @@ type WarehouseRepository interface {
 	GetStocks(ctx context.Context, sku uint32, warehouseId int64) (model.StockItem, error)
 }
 
+type DeleteReservationWorker interface {
+	AddDelayJob(job model.JobDeleteReservation)
+}
+
 type TransactionManager interface {
 	RunRepeatableRead(ctx context.Context, f func(ctxTX context.Context) error) error
 	// todo RunSerializable()
@@ -38,6 +42,7 @@ type Domain struct {
 	OrdersRepository
 	OrderItemsRepository
 	WarehouseRepository
+	DeleteReservationWorker
 }
 
 func New(
@@ -45,11 +50,13 @@ func New(
 	ordersRepository OrdersRepository,
 	orderItemsRepository OrderItemsRepository,
 	warehouseRepository WarehouseRepository,
+	deleteReservationWorker DeleteReservationWorker,
 ) *Domain {
 	return &Domain{
 		transactionManager,
 		ordersRepository,
 		orderItemsRepository,
 		warehouseRepository,
+		deleteReservationWorker,
 	}
 }
