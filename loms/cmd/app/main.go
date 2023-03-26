@@ -50,12 +50,15 @@ func main() {
 	orderItemsRepo := db.NewOrderItemsRepository(tm)
 	warehouseRepo := db.NewWarehouseRepository(tm)
 
-	drw := worker.NewDeleteReservationWorker(
+	drw, err := worker.NewDeleteReservationWorker(
 		ctx,
 		amountWorkers,
 		ordersRepo,
 		warehouseRepo,
 	)
+	if err != nil {
+		log.Fatalf("failed start DeleteReservationWorker: %v", err)
+	}
 
 	businessLogic := domain.New(
 		tm,

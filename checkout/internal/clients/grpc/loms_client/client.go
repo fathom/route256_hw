@@ -3,14 +3,21 @@ package loms_client
 import (
 	"context"
 	"route256/checkout/internal/converter"
-	"route256/checkout/internal/domain"
 	"route256/checkout/internal/model"
 	desc "route256/loms/pkg/loms_v1"
 
 	"google.golang.org/grpc"
 )
 
-var _ domain.LomsService = &client{}
+//go:generate sh -c "rm -rf mocks && mkdir -p mocks"
+//go:generate minimock -i LomsService -o ./mocks/ -s "_minimock.go"
+
+type LomsService interface {
+	Stocks(ctx context.Context, sku uint32) ([]*model.Stock, error)
+	CreateOrder(ctx context.Context, user int64, items []*model.OrderItem) (int64, error)
+}
+
+var _ LomsService = &client{}
 
 type client struct {
 	lomsService desc.LomsV1Client

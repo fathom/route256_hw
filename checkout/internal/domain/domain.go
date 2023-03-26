@@ -2,17 +2,18 @@ package domain
 
 import (
 	"context"
+	"route256/checkout/internal/clients/grpc/loms_client"
+	"route256/checkout/internal/clients/grpc/product_client"
 	"route256/checkout/internal/model"
+	"route256/checkout/internal/repository/db_repository"
+	"route256/checkout/internal/repository/db_repository/transactor"
 )
 
-type LomsService interface {
-	Stocks(ctx context.Context, sku uint32) ([]*model.Stock, error)
-	CreateOrder(ctx context.Context, user int64, items []*model.OrderItem) (int64, error)
-}
+//go:generate sh -c "rm -rf mocks && mkdir -p mocks"
+//go:generate minimock -i Limiter -o ./mocks/ -s "_minimock.go"
 
-type ProductService interface {
-	GetProduct(ctx context.Context, sku uint32) (string, uint32, error)
-	ListSkus(ctx context.Context, startAfterSku, count uint32) ([]uint32, error)
+type Limiter interface {
+	Wait(ctx context.Context) (err error)
 }
 
 type BusinessLogic interface {
@@ -22,41 +23,28 @@ type BusinessLogic interface {
 	DeleteFromCart(context.Context, int64, uint32, uint32) error
 }
 
-type CartRepository interface {
-	AddToCart(ctx context.Context, userID int64, sku uint32, count uint32) error
-	UpdateCountCart(ctx context.Context, userID int64, sku uint32, count uint32) error
-	DeleteCart(ctx context.Context, userID int64, sku uint32) error
-	DeleteUserCart(ctx context.Context, userID int64) error
-	ListCart(ctx context.Context, userID int64) ([]model.CartItem, error)
-	GetCartItem(ctx context.Context, userID int64, sku uint32) (model.CartItem, error)
-}
-
-type TransactionManager interface {
-	RunRepeatableRead(ctx context.Context, f func(ctxTX context.Context) error) error
-	// todo RunSerializable()
-	// todo RunCommitted()
-	// todo RunUncommitted()
-}
-
 var _ BusinessLogic = (*domain)(nil)
 
 type domain struct {
-	lomsService        LomsService
-	productService     ProductService
-	transactionManager TransactionManager
-	cartRepository     CartRepository
+	lomsService        loms_client.LomsService
+	productService     product_client.ProductService
+	transactionManager transactor.TransactionManager
+	cartRepository     db_repository.CartRepository
+	limiter            Limiter
 }
 
 func New(
-	lomsService LomsService,
-	productService ProductService,
-	transactionManager TransactionManager,
-	cartRepository CartRepository,
+	lomsService loms_client.LomsService,
+	productService product_client.ProductService,
+	transactionManager transactor.TransactionManager,
+	cartRepository db_repository.CartRepository,
+	limiter Limiter,
 ) *domain {
 	return &domain{
 		lomsService:        lomsService,
 		productService:     productService,
 		transactionManager: transactionManager,
 		cartRepository:     cartRepository,
+		limiter:            limiter,
 	}
 }

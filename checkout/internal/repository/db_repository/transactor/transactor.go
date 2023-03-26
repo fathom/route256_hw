@@ -8,12 +8,22 @@ import (
 	"go.uber.org/multierr"
 )
 
-type TransactionManager struct {
+//go:generate sh -c "rm -rf mocks && mkdir -p mocks"
+//go:generate minimock -i TransactionManager -o ./mocks/ -s "_minimock.go"
+
+type TransactionManager interface {
+	RunRepeatableRead(ctx context.Context, f func(ctxTX context.Context) error) error
+	// todo RunSerializable()
+	// todo RunCommitted()
+	// todo RunUncommitted()
+}
+
+type transactionManager struct {
 	pool *pgxpool.Pool
 }
 
-func NewTransactionManager(pool *pgxpool.Pool) *TransactionManager {
-	return &TransactionManager{
+func NewTransactionManager(pool *pgxpool.Pool) *transactionManager {
+	return &transactionManager{
 		pool: pool,
 	}
 }
@@ -22,7 +32,7 @@ type txkey string
 
 const key = txkey("tx")
 
-func (tm *TransactionManager) RunRepeatableRead(ctx context.Context, fx func(ctxTX context.Context) error) error {
+func (tm *transactionManager) RunRepeatableRead(ctx context.Context, fx func(ctxTX context.Context) error) error {
 	tx, err := tm.pool.BeginTx(ctx,
 		pgx.TxOptions{
 			IsoLevel: pgx.RepeatableRead,
@@ -42,7 +52,7 @@ func (tm *TransactionManager) RunRepeatableRead(ctx context.Context, fx func(ctx
 	return nil
 }
 
-func (tm *TransactionManager) GetQueryEngine(ctx context.Context) QueryEngine {
+func (tm *transactionManager) GetQueryEngine(ctx context.Context) QueryEngine {
 	tx, ok := ctx.Value(key).(QueryEngine)
 	if ok && tx != nil {
 		return tx

@@ -7,10 +7,8 @@ import (
 	"route256/checkout/internal/model"
 	"route256/libs/workerpool"
 	"sync"
-	"time"
 
 	"github.com/pkg/errors"
-	"golang.org/x/time/rate"
 )
 
 func (d *domain) ListCart(ctx context.Context, userID int64) ([]model.CartItem, error) {
@@ -21,13 +19,10 @@ func (d *domain) ListCart(ctx context.Context, userID int64) ([]model.CartItem, 
 		return nil, err
 	}
 
-	// Ограничиваем кол-во запросов 10rps
-	limiter := rate.NewLimiter(rate.Every(1*time.Second/10), 10)
-
 	// Колбэк для обработки задания
 	callback := func(cartItem model.CartItem) (model.CartItem, error) {
 		log.Printf("gorutine GetProduct start: %+v", cartItem.Sku)
-		err := limiter.Wait(ctx)
+		err := d.limiter.Wait(ctx)
 		if err != nil {
 			return model.CartItem{}, err
 		}
@@ -35,13 +30,17 @@ func (d *domain) ListCart(ctx context.Context, userID int64) ([]model.CartItem, 
 		log.Printf("gorutine GetProduct make request: %+v", cartItem.Sku)
 		cartItem.Name, cartItem.Price, err = d.productService.GetProduct(ctx, cartItem.Sku)
 		if err != nil {
+			log.Printf("get error from productService: %+v", err)
 			return model.CartItem{}, errors.WithMessage(err, "wrong sku")
 		}
 		log.Printf("gorutine GetProduct finish: %+v", cartItem.Sku)
 		return cartItem, nil
 	}
 
-	pool := workerpool.NewPool[model.CartItem, model.CartItem](ctx, config.ConfigData.CountWorkers)
+	pool, err := workerpool.NewPool[model.CartItem, model.CartItem](ctx, config.ConfigData.CountWorkers)
+	if err != nil {
+		return nil, err
+	}
 
 	var wg sync.WaitGroup
 
@@ -56,6 +55,8 @@ func (d *domain) ListCart(ctx context.Context, userID int64) ([]model.CartItem, 
 		for _, cartItem := range userCart {
 			select {
 			case <-ctx.Done():
+				log.Printf("while add job context Done and close JobChan")
+				close(pool.JobChan)
 				return
 			default:
 				log.Printf("add job: %+v", cartItem.Sku)
