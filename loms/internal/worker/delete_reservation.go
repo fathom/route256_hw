@@ -21,9 +21,14 @@ func NewDeleteReservationWorker(
 	amountWorkers int,
 	ordersRepository domain.OrdersRepository,
 	warehouseRepository domain.WarehouseRepository,
-) *DeleteReservationWorker {
+) (*DeleteReservationWorker, error) {
+	pool, err := workerpool.NewPool[model.JobDeleteReservation, bool](ctx, amountWorkers)
+	if err != nil {
+		return nil, err
+	}
+
 	DeleteReservationService := &DeleteReservationWorker{
-		pool:                workerpool.NewPool[model.JobDeleteReservation, bool](ctx, amountWorkers),
+		pool:                pool,
 		ordersRepository:    ordersRepository,
 		warehouseRepository: warehouseRepository,
 		ctx:                 ctx,
@@ -36,7 +41,7 @@ func NewDeleteReservationWorker(
 		}
 	}()
 
-	return DeleteReservationService
+	return DeleteReservationService, nil
 }
 
 // AddDelayJob Добавление отложенной задачи на проверку оплаты заказа

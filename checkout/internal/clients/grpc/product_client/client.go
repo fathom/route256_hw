@@ -1,14 +1,21 @@
-package loms_client
+package product_client
 
 import (
 	"context"
-	"route256/checkout/internal/domain"
 	desc "route256/product_service/pkg/product_service"
 
 	"google.golang.org/grpc"
 )
 
-var _ domain.ProductService = &client{}
+//go:generate sh -c "rm -rf mocks && mkdir -p mocks"
+//go:generate minimock -i ProductService -o ./mocks/ -s "_minimock.go"
+
+type ProductService interface {
+	GetProduct(ctx context.Context, sku uint32) (string, uint32, error)
+	ListSkus(ctx context.Context, startAfterSku, count uint32) ([]uint32, error)
+}
+
+var _ ProductService = &client{}
 
 type client struct {
 	productService desc.ProductServiceClient

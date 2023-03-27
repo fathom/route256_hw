@@ -13,8 +13,10 @@ import (
 	db "route256/checkout/internal/repository/db_repository"
 	"route256/checkout/internal/repository/db_repository/transactor"
 	desc "route256/checkout/pkg/checkout_v1"
+	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
+	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
@@ -62,11 +64,15 @@ func main() {
 
 	productServiceClient := ProductClient.New(productConn, config.ConfigData.Token)
 
+	// Ограничиваем кол-во запросов 10rps
+	limiter := rate.NewLimiter(rate.Every(1*time.Second/10), 10)
+
 	businessLogic := domain.New(
 		lomsClient,
 		productServiceClient,
 		tm,
 		cartRepo,
+		limiter,
 	)
 
 	desc.RegisterCheckoutV1Server(s, CheckoutV1.NewCheckoutV1(businessLogic))

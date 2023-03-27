@@ -2,6 +2,7 @@ package workerpool
 
 import (
 	"context"
+	"errors"
 	"log"
 	"sync"
 )
@@ -30,15 +31,21 @@ type Pool[In, Out any] struct {
 
 // Проверка на соблюдение интерфейса WorkerPool
 var _ WorkerPool[any, any] = &Pool[any, any]{}
+var ErrNoWorkers = errors.New("no workers")
 
 // NewPool создать новый worker pool
-func NewPool[In, Out any](ctx context.Context, amountWorkers int) *Pool[In, Out] {
+func NewPool[In, Out any](ctx context.Context, amountWorkers int) (*Pool[In, Out], error) {
+	if amountWorkers < 1 {
+		return nil, ErrNoWorkers
+	}
+
 	pool := &Pool[In, Out]{
 		amountWorkers: amountWorkers,
 		JobChan:       make(chan Job[In, Out], amountWorkers),
 		ResultChan:    make(chan Out, amountWorkers),
 		ErrorChan:     make(chan error, amountWorkers),
 	}
+
 	log.Printf("total workers %v", amountWorkers)
 	for i := 0; i < amountWorkers; i++ {
 		pool.wg.Add(1)
@@ -48,8 +55,7 @@ func NewPool[In, Out any](ctx context.Context, amountWorkers int) *Pool[In, Out]
 				log.Printf("destroy worker %v", num)
 			}()
 
-			log.Printf("add worker %v", num)
-			worker(ctx, pool.JobChan, pool.ResultChan, pool.ErrorChan)
+			worker(num, ctx, pool.JobChan, pool.ResultChan, pool.ErrorChan)
 		}(i)
 	}
 
@@ -57,7 +63,7 @@ func NewPool[In, Out any](ctx context.Context, amountWorkers int) *Pool[In, Out]
 		pool.Close()
 	}()
 
-	return pool
+	return pool, nil
 }
 
 // AddJob добавить задачу в воркер пул
@@ -75,14 +81,18 @@ func (p *Pool[In, Out]) Close() {
 
 // worker для обработки задач
 func worker[In, Out any](
+	num int,
 	ctx context.Context,
 	jobChan <-chan Job[In, Out],
 	resultChan chan<- Out,
 	errorChan chan<- error,
 ) {
+	log.Printf("add worker %v %v", num, jobChan)
 	for job := range jobChan {
+		log.Printf("listen jobChan")
 		select {
 		case <-ctx.Done():
+			log.Printf("while lisen jobChan context Done")
 			return
 		default:
 			out, err := job.Callback(job.Args)
@@ -93,4 +103,5 @@ func worker[In, Out any](
 			resultChan <- out
 		}
 	}
+	log.Printf("exit from worker %v", num)
 }
