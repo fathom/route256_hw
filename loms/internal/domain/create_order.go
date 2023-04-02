@@ -49,6 +49,12 @@ func (d *Domain) CreateOrder(ctx context.Context, user int64, items []*model.Ord
 		return 0, ErrCreateOrderFailed
 	}
 
+	err = d.OrderStatusSender.SendOrderStatus(orderId, newOrder.Status)
+	if err != nil {
+		log.Printf("OrderStatusSender: %+v", err)
+		return 0, err
+	}
+
 	err = d.TransactionManager.RunRepeatableRead(ctx, func(ctxTX context.Context) error {
 
 		expiredAt := time.Now().Add(time.Minute * 10)
@@ -93,6 +99,13 @@ func (d *Domain) CreateOrder(ctx context.Context, user int64, items []*model.Ord
 		if err != nil {
 			return 0, err
 		}
+
+		err = d.OrderStatusSender.SendOrderStatus(orderId, model.Failed)
+		if err != nil {
+			log.Printf("OrderStatusSender: %+v", err)
+			return 0, err
+		}
+
 		return 0, ErrReservationFailed
 	}
 
@@ -105,6 +118,12 @@ func (d *Domain) CreateOrder(ctx context.Context, user int64, items []*model.Ord
 	d.DeleteReservationWorker.AddDelayJob(model.JobDeleteReservation{
 		OrderId: orderId,
 	})
+
+	err = d.OrderStatusSender.SendOrderStatus(orderId, model.AwaitingPayment)
+	if err != nil {
+		log.Printf("OrderStatusSender: %+v", err)
+		return 0, err
+	}
 
 	return orderId, nil
 }

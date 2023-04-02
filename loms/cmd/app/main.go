@@ -8,6 +8,8 @@ import (
 	LomsV1 "route256/loms/internal/api/loms_v1"
 	"route256/loms/internal/config"
 	"route256/loms/internal/domain"
+	"route256/loms/internal/kafka"
+	orderStauts "route256/loms/internal/notifications/order_status"
 	db "route256/loms/internal/repository/db_repository"
 	"route256/loms/internal/repository/db_repository/transactor"
 	"route256/loms/internal/worker"
@@ -45,6 +47,13 @@ func main() {
 	}
 	defer dbpool.Close()
 
+	producer, err := kafka.NewSyncProducer(config.ConfigData.KafkaBrokers)
+	if err != nil {
+		log.Fatalf("Unable to create kafka producer: %v\n", err)
+	}
+
+	orderStatusSender := orderStauts.NewOrderStatusSender(producer, "orders")
+
 	tm := transactor.NewTransactionManager(dbpool)
 	ordersRepo := db.NewOrdersRepository(tm)
 	orderItemsRepo := db.NewOrderItemsRepository(tm)
@@ -66,6 +75,7 @@ func main() {
 		orderItemsRepo,
 		warehouseRepo,
 		drw,
+		orderStatusSender,
 	)
 
 	desc.RegisterLomsV1Server(s, LomsV1.NewLomsV1(businessLogic))
