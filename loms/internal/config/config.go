@@ -1,10 +1,11 @@
 package config
 
 import (
-	"github.com/caarlos0/env/v6"
-	"github.com/pkg/errors"
 	"os"
 	"strings"
+
+	"github.com/caarlos0/env/v6"
+	"github.com/pkg/errors"
 )
 
 type ConfigStruct struct {

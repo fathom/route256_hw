@@ -9,9 +9,9 @@ services:
   checkout:
     container_name: 'checkout-app'
     image: checkout
+    build: ./checkout/
     environment:
       DATABASE_URL: postgres://postgres:secret@checkout-db:5432/checkout?sslmode=disable
-    build: ./checkout/
     ports:
       - "50052:50052"
     restart: unless-stopped
@@ -174,11 +174,24 @@ services:
     networks:
       - route256
 
-  # notification:
-  #   image: notification
-  #   build: ./notification
-  #   ports:
-  #     - "8082:8082"
+  notifications:
+    container_name: 'notifications-app'
+    image: notifications
+    build: ./notifications/
+    environment:
+      KAFKA_BROKERS: kafka1:29091,kafka2:29092,kafka3:29093
+    restart: unless-stopped
+    networks:
+      - route256
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+      kafka1:
+        condition: service_started
+      kafka2:
+        condition: service_started
+      kafka3:
+        condition: service_started
 
 volumes:
   checkout-db-data:

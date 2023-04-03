@@ -2,10 +2,11 @@ package order_status
 
 import (
 	"fmt"
-	"github.com/Shopify/sarama"
 	"log"
 	"route256/loms/internal/model"
 	"time"
+
+	"github.com/Shopify/sarama"
 )
 
 type OrderStatusSender interface {
