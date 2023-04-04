@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"route256/loms/internal/model"
+	orderStauts "route256/loms/internal/notifications/order_status"
 	"time"
 )
 
@@ -43,6 +44,7 @@ type Domain struct {
 	OrderItemsRepository
 	WarehouseRepository
 	DeleteReservationWorker
+	orderStauts.OrderStatusSender
 }
 
 func New(
@@ -51,6 +53,7 @@ func New(
 	orderItemsRepository OrderItemsRepository,
 	warehouseRepository WarehouseRepository,
 	deleteReservationWorker DeleteReservationWorker,
+	orderStatusSender orderStauts.OrderStatusSender,
 ) *Domain {
 	return &Domain{
 		transactionManager,
@@ -58,5 +61,6 @@ func New(
 		orderItemsRepository,
 		warehouseRepository,
 		deleteReservationWorker,
+		orderStatusSender,
 	}
 }

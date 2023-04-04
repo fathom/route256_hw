@@ -49,5 +49,11 @@ func (d *Domain) OrderPayed(ctx context.Context, orderId int64) error {
 		return ErrPayOrderFailed
 	}
 
+	err = d.OrderStatusSender.SendOrderStatus(orderId, model.Payed)
+	if err != nil {
+		log.Printf("OrderStatusSender: %+v", err)
+		return err
+	}
+
 	return nil
 }

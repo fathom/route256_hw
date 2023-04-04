@@ -18,5 +18,11 @@ func (d *Domain) CancelOrder(ctx context.Context, orderId int64) error {
 		return err
 	}
 
+	err = d.OrderStatusSender.SendOrderStatus(orderId, model.Cancelled)
+	if err != nil {
+		log.Printf("OrderStatusSender: %+v", err)
+		return err
+	}
+
 	return nil
 }
