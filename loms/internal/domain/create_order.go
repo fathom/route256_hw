@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"route256/loms/internal/logger"
 	"route256/loms/internal/model"
 	"time"
 )
@@ -45,13 +45,13 @@ func (d *Domain) CreateOrder(ctx context.Context, user int64, items []*model.Ord
 	})
 
 	if err != nil {
-		log.Println("create order failed", err)
+		logger.Debug(fmt.Sprintf("create order failed: %+v", err))
 		return 0, ErrCreateOrderFailed
 	}
 
 	err = d.OrderStatusSender.SendOrderStatus(orderId, newOrder.Status)
 	if err != nil {
-		log.Printf("OrderStatusSender: %+v", err)
+		logger.Debug(fmt.Sprintf("OrderStatusSender: %+v", err))
 		return 0, err
 	}
 
@@ -94,7 +94,7 @@ func (d *Domain) CreateOrder(ctx context.Context, user int64, items []*model.Ord
 	})
 
 	if err != nil {
-		log.Println("reservation failed", err)
+		logger.Debug(fmt.Sprintf("reservation failed: %+v", err))
 		err := d.OrdersRepository.UpdateStatusOrder(ctx, orderId, model.Failed)
 		if err != nil {
 			return 0, err
@@ -102,7 +102,7 @@ func (d *Domain) CreateOrder(ctx context.Context, user int64, items []*model.Ord
 
 		err = d.OrderStatusSender.SendOrderStatus(orderId, model.Failed)
 		if err != nil {
-			log.Printf("OrderStatusSender: %+v", err)
+			logger.Debug(fmt.Sprintf("OrderStatusSender: %+v", err))
 			return 0, err
 		}
 
@@ -121,7 +121,7 @@ func (d *Domain) CreateOrder(ctx context.Context, user int64, items []*model.Ord
 
 	err = d.OrderStatusSender.SendOrderStatus(orderId, model.AwaitingPayment)
 	if err != nil {
-		log.Printf("OrderStatusSender: %+v", err)
+		logger.Debug(fmt.Sprintf("OrderStatusSender: %+v", err))
 		return 0, err
 	}
 

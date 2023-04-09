@@ -5,7 +5,10 @@ import (
 	"log"
 	"route256/notifications/internal/config"
 	"route256/notifications/internal/kafka"
+	lg "route256/notifications/internal/logger"
 	OrderStatus "route256/notifications/internal/notifications/order_status"
+
+	"go.uber.org/zap"
 )
 
 // Notifications
@@ -14,15 +17,23 @@ import (
 func main() {
 	config.Init()
 
+	logger := lg.NewLogger(config.ConfigData.Dev)
+	defer func() {
+		err := logger.Sync()
+		if err != nil {
+			log.Fatal("logger sync", err)
+		}
+	}()
+
 	consumer, err := kafka.NewConsumer(config.ConfigData.KafkaBrokers)
 	if err != nil {
-		log.Fatalf("Unable to create kafka consumer: %v", err)
+		logger.Fatal("unable to create kafka consumer", zap.Error(err))
 	}
 
 	receiver := OrderStatus.NewReceiver(consumer)
 	err = receiver.Subscribe("orders")
 	if err != nil {
-		log.Fatalf("Get error from kafka: %v", err)
+		logger.Fatal("get error from kafka", zap.Error(err))
 	}
 
 	<-context.TODO().Done()

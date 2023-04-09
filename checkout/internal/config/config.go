@@ -1,7 +1,6 @@
 package config
 
 import (
-	"log"
 	"os"
 
 	"github.com/caarlos0/env/v6"
@@ -15,6 +14,7 @@ type ConfigStruct struct {
 	DatabaseURL  string         `yaml:"database_url" env:"DATABASE_URL"`
 	CountWorkers int            `yaml:"count_workers" env:"COUNT_WORKERS"`
 	Services     ConfigServices `yaml:"services"`
+	Dev          bool           `yaml:"development_mode" env:"DEVELOPMENT_MODE"`
 }
 
 type ConfigServices struct {
@@ -38,8 +38,6 @@ func Init() error {
 	if err := env.Parse(&ConfigData); err != nil {
 		return errors.WithMessage(err, "parsing ENV")
 	}
-
-	log.Printf("%+v", ConfigData.Services)
 
 	return nil
 }

@@ -2,7 +2,9 @@ package domain
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"route256/checkout/internal/logger"
 
 	"github.com/pkg/errors"
 )
@@ -19,7 +21,7 @@ func (d *domain) AddToCart(ctx context.Context, userID int64, sku uint32, count 
 		return errors.WithMessage(err, "checking stocks")
 	}
 
-	log.Printf("stocks reseived: %+v", stocks)
+	logger.Debug(fmt.Sprintf("stocks reseived: %+v", stocks))
 
 	cartItem, err := d.cartRepository.GetCartItem(ctx, userID, sku)
 	if err != nil && !errors.As(err, &ErrNotFound) {

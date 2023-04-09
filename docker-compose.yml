@@ -53,6 +53,7 @@ services:
       DATABASE_URL: postgres://postgres:secret@loms-db:5432/loms?sslmode=disable
       GRPC_PORT: 50051
       KAFKA_BROKERS: kafka1:29091,kafka2:29092,kafka3:29093
+      DEVELOPMENT_MODE: true
     ports:
       - "50051:50051"
     restart: unless-stopped
@@ -180,6 +181,7 @@ services:
     build: ./notifications/
     environment:
       KAFKA_BROKERS: kafka1:29091,kafka2:29092,kafka3:29093
+      DEVELOPMENT_MODE: true
     restart: unless-stopped
     networks:
       - route256

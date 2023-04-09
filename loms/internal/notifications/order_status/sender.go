@@ -2,7 +2,7 @@ package order_status
 
 import (
 	"fmt"
-	"log"
+	"route256/loms/internal/logger"
 	"route256/loms/internal/model"
 	"time"
 
@@ -41,6 +41,7 @@ func (o orderStatusSender) SendOrderStatus(orderID int64, status model.OrderStat
 		return err
 	}
 
-	log.Printf("order id: %d, status: %v, partition: %d, offset: %d", orderID, status, partition, offset)
+	logger.Info(fmt.Sprintf("order id: %d, status: %v, partition: %d, offset: %d", orderID, status, partition, offset))
+
 	return nil
 }

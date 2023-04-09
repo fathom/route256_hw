@@ -8,6 +8,7 @@ import (
 	pc "route256/checkout/internal/clients/grpc/product_client"
 	pcMocks "route256/checkout/internal/clients/grpc/product_client/mocks"
 	domainMocks "route256/checkout/internal/domain/mocks"
+	"route256/checkout/internal/logger"
 	"route256/checkout/internal/model"
 	cr "route256/checkout/internal/repository/db_repository"
 	crMocks "route256/checkout/internal/repository/db_repository/mocks"
@@ -26,6 +27,8 @@ func TestPurchase(t *testing.T) {
 	type productServiceMockFunc func(mc *minimock.Controller) pc.ProductService
 	type lomsServiceMockFunc func(mc *minimock.Controller) lc.LomsService
 	type limiterMockFunc func(mc *minimock.Controller) Limiter
+
+	logger.Init(true)
 
 	type args struct {
 		ctx    context.Context

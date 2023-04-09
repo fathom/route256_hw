@@ -2,14 +2,15 @@ package domain
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"route256/checkout/internal/logger"
 	"route256/checkout/internal/model"
 
 	"github.com/pkg/errors"
 )
 
 func (d *domain) Purchase(ctx context.Context, userID int64) error {
-	log.Printf("CreateOrder for user: %+v", userID)
+	logger.Debug(fmt.Sprintf("CreateOrder for user: %+v", userID))
 
 	userCart, err := d.cartRepository.ListCart(ctx, userID)
 	if err != nil {
@@ -29,7 +30,7 @@ func (d *domain) Purchase(ctx context.Context, userID int64) error {
 	if err != nil {
 		return errors.WithMessage(err, "failed create order")
 	}
-	log.Printf("Created Order: %+v", orderID)
+	logger.Debug(fmt.Sprintf("Created Order: %+v", orderID))
 
 	err = d.cartRepository.DeleteUserCart(ctx, userID)
 	if err != nil {

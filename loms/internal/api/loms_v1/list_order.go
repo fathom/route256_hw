@@ -2,7 +2,8 @@ package loms_v1
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"route256/loms/internal/logger"
 	desc "route256/loms/pkg/loms_v1"
 )
 
@@ -10,7 +11,7 @@ import (
 // Показывает информацию по заказу
 
 func (h *Handlers) ListOrder(ctx context.Context, request *desc.ListOrderRequest) (*desc.ListOrderResponse, error) {
-	log.Printf("listOrder: %+v", request)
+	logger.Debug(fmt.Sprintf("listOrder: %+v", request))
 
 	order, orderItems, err := h.businessLogic.ListOrder(ctx, request.GetOrderId())
 	if err != nil {
