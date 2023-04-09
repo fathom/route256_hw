@@ -1,11 +1,23 @@
 package logger
 
-import "go.uber.org/zap"
+import (
+	"route256/notifications/internal/config"
+
+	"go.uber.org/zap"
+)
 
 var globalLogger *zap.Logger
 
 func Init(dev bool) {
 	globalLogger = NewLogger(dev)
+}
+
+func GetLogger() *zap.Logger {
+	if globalLogger == nil {
+		Init(config.ConfigData.Dev)
+	}
+
+	return globalLogger
 }
 
 func NewLogger(dev bool) *zap.Logger {

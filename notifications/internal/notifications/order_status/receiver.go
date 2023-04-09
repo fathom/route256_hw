@@ -3,6 +3,7 @@ package order_status
 import (
 	"fmt"
 	"route256/notifications/internal/logger"
+	"route256/notifications/internal/metrics"
 
 	"github.com/Shopify/sarama"
 )
@@ -37,6 +38,8 @@ func (r *receiver) Subscribe(topic string) error {
 			for message := range pc.Messages() {
 				orderID := string(message.Key)
 				status := string(message.Value)
+
+				metrics.JobCounter.Inc()
 
 				logger.Info(fmt.Sprintf(
 					"read: orderID: %s, status: %s,  topic: %s, partion: %d, offset: %d",
