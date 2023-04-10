@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"route256/loms/internal/logger"
 	desc "route256/loms/pkg/loms_v1"
+
+	"github.com/opentracing/opentracing-go"
 )
 
 // stocks
@@ -14,6 +16,11 @@ import (
 
 func (h *Handlers) Stocks(ctx context.Context, request *desc.StocksRequest) (*desc.StocksResponse, error) {
 	logger.Debug(fmt.Sprintf("stocks: %+v", request))
+
+	span, ctx := opentracing.StartSpanFromContext(ctx, "checking stocks")
+	defer span.Finish()
+
+	span.SetTag("sku", request.GetSku())
 
 	items, err := h.businessLogic.Stocks(ctx, request.GetSku())
 	if err != nil {

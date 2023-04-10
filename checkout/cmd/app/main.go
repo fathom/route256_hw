@@ -16,12 +16,15 @@ import (
 	"route256/checkout/internal/metrics"
 	db "route256/checkout/internal/repository/db_repository"
 	"route256/checkout/internal/repository/db_repository/transactor"
+	"route256/checkout/internal/tracing"
 	desc "route256/checkout/pkg/checkout_v1"
 	"time"
 
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpcPrometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
@@ -42,6 +45,7 @@ func main() {
 
 	// Инициализация логирования
 	logger.Init(config.ConfigData.Dev)
+	tracing.Init(config.ConfigData.Jaeger, "checkout")
 
 	logger.Info(
 		"init config services",
@@ -61,6 +65,7 @@ func main() {
 			grpcMiddleware.ChainUnaryServer(
 				interceptors.LoggingInterceptor(logger.GetLogger()),
 				interceptors.Metrics,
+				interceptors.Tracing,
 			),
 		),
 	)
@@ -84,6 +89,7 @@ func main() {
 		config.ConfigData.Services.Loms,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(interceptors.ClientInterceptor),
+		grpc.WithUnaryInterceptor(otgrpc.OpenTracingClientInterceptor(opentracing.GlobalTracer())),
 	)
 	if err != nil {
 		logger.Fatal("failed connect to loms server", zap.Error(err))
@@ -98,6 +104,7 @@ func main() {
 		config.ConfigData.Services.Product,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(interceptors.ClientInterceptor),
+		grpc.WithUnaryInterceptor(otgrpc.OpenTracingClientInterceptor(opentracing.GlobalTracer())),
 	)
 	if err != nil {
 		logger.Fatal("failed connect to product server", zap.Error(err))

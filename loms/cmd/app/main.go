@@ -16,12 +16,15 @@ import (
 	orderStauts "route256/loms/internal/notifications/order_status"
 	db "route256/loms/internal/repository/db_repository"
 	"route256/loms/internal/repository/db_repository/transactor"
+	"route256/loms/internal/tracing"
 	"route256/loms/internal/worker"
 	desc "route256/loms/pkg/loms_v1"
 
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpcPrometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -40,6 +43,7 @@ func main() {
 
 	// Инициализация логирования
 	logger.Init(config.ConfigData.Dev)
+	tracing.Init(config.ConfigData.Jaeger, "loms")
 
 	// Инициализация grpc сервера
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", config.ConfigData.GrpcPort))
@@ -52,6 +56,7 @@ func main() {
 			grpcMiddleware.ChainUnaryServer(
 				interceptors.LoggingInterceptor(logger.GetLogger()),
 				interceptors.Metrics,
+				otgrpc.OpenTracingServerInterceptor(opentracing.GlobalTracer()),
 			),
 		),
 	)

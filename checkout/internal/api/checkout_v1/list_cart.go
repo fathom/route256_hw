@@ -28,7 +28,7 @@ func (h *Handlers) ListCart(ctx context.Context, request *desc.ListCartRequest) 
 			Name:  item.Name,
 			Price: item.Price,
 		})
-		response.TotalPrice += item.Price
+		response.TotalPrice += item.Price * item.Count
 	}
 
 	return response, nil
