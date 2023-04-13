@@ -9,6 +9,24 @@ import (
 )
 
 var (
+	CacheRequestCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: "checkout",
+		Subsystem: "cache",
+		Name:      "request_total",
+	})
+
+	CacheHitsCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: "checkout",
+		Subsystem: "cache",
+		Name:      "hits_total",
+	})
+
+	CacheErrorsCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: "checkout",
+		Subsystem: "cache",
+		Name:      "errors_total",
+	})
+
 	RequestCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: "checkout",
 		Subsystem: "grpc",

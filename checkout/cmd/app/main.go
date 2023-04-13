@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	CheckoutV1 "route256/checkout/internal/api/checkout_v1"
+	c "route256/checkout/internal/cache"
 	LomsClient "route256/checkout/internal/clients/grpc/loms_client"
 	ProductClient "route256/checkout/internal/clients/grpc/product_client"
 	"route256/checkout/internal/config"
@@ -18,6 +19,7 @@ import (
 	"route256/checkout/internal/repository/db_repository/transactor"
 	"route256/checkout/internal/tracing"
 	desc "route256/checkout/pkg/checkout_v1"
+	ps "route256/product_service/pkg/product_service"
 	"time"
 
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -112,7 +114,9 @@ func main() {
 	}
 	defer productConn.Close()
 
-	productServiceClient := ProductClient.New(productConn, config.ConfigData.Token)
+	cache := c.NewInMemCache[uint32, *ps.GetProductResponse]()
+
+	productServiceClient := ProductClient.New(productConn, cache, config.ConfigData.Token)
 
 	// Ограничиваем кол-во запросов 10rps
 	limiter := rate.NewLimiter(rate.Every(1*time.Second/10), 10)
