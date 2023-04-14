@@ -2,7 +2,8 @@ package domain
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"route256/loms/internal/logger"
 	"route256/loms/internal/model"
 )
 
@@ -11,7 +12,7 @@ func (d *Domain) CancelOrder(ctx context.Context, orderId int64) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("order %v mark as %v", orderId, model.Cancelled)
+	logger.Debug(fmt.Sprintf("order %v mark as %v", orderId, model.Cancelled))
 
 	err = d.WarehouseRepository.DeleteReservation(ctx, orderId)
 	if err != nil {
@@ -20,7 +21,7 @@ func (d *Domain) CancelOrder(ctx context.Context, orderId int64) error {
 
 	err = d.OrderStatusSender.SendOrderStatus(orderId, model.Cancelled)
 	if err != nil {
-		log.Printf("OrderStatusSender: %+v", err)
+		logger.Debug(fmt.Sprintf("OrderStatusSender: %+v", err))
 		return err
 	}
 

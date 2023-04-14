@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"route256/loms/internal/logger"
 	"route256/loms/internal/model"
 	"route256/loms/internal/repository/db_repository/schema"
 	"route256/loms/internal/repository/db_repository/transactor"
@@ -52,7 +52,8 @@ func (r *WarehouseRepository) GetStocksBySku(ctx context.Context, sku uint32) ([
 	var item schema.WarehouseStocksWithReservations
 	var result []model.StockItem
 
-	log.Printf("GetStocksBySku Query: %v with %v", query, args)
+	logger.Debug(fmt.Sprintf("GetStocksBySku Query: %v with %v", query, args))
+
 	rows, err := db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -92,7 +93,8 @@ func (r *WarehouseRepository) GetStocks(ctx context.Context, sku uint32, warehou
 		return model.StockItem{}, err
 	}
 
-	log.Printf("GetStocks Query: %v with %v", query, args)
+	logger.Debug(fmt.Sprintf("GetStocks Query: %v with %v", query, args))
+
 	rows, err := db.Query(ctx, query, args...)
 	if err != nil {
 		return model.StockItem{}, err
@@ -128,7 +130,8 @@ func (r *WarehouseRepository) UpdateWarehouse(ctx context.Context, sku uint32, w
 		return err
 	}
 
-	log.Printf("UpdateWarehouse Query: %v with %v", query, args)
+	logger.Debug(fmt.Sprintf("UpdateWarehouse Query: %v with %v", query, args))
+
 	_, err = db.Exec(ctx, query, args...)
 	if err != nil {
 		return err
@@ -157,7 +160,8 @@ func (r *WarehouseRepository) GetReservationByOrderId(ctx context.Context, order
 	var item schema.WarehouseReservations
 	var result []model.StockReservationItem
 
-	log.Printf("GetReservationByOrderId Query: %v with %v", query, args)
+	logger.Debug(fmt.Sprintf("GetReservationByOrderId Query: %v with %v", query, args))
+
 	rows, err := db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err

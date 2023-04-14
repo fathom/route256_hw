@@ -2,8 +2,10 @@ package domain
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"route256/checkout/internal/config"
+	"route256/checkout/internal/logger"
 	"route256/checkout/internal/model"
 	"route256/libs/workerpool"
 	"sync"
@@ -12,7 +14,7 @@ import (
 )
 
 func (d *domain) ListCart(ctx context.Context, userID int64) ([]model.CartItem, error) {
-	log.Printf("listCart for user: %+v", userID)
+	logger.Debug(fmt.Sprintf("listCart for user: %+v", userID))
 
 	userCart, err := d.cartRepository.ListCart(ctx, userID)
 	if err != nil {
@@ -21,19 +23,20 @@ func (d *domain) ListCart(ctx context.Context, userID int64) ([]model.CartItem, 
 
 	// Колбэк для обработки задания
 	callback := func(cartItem model.CartItem) (model.CartItem, error) {
-		log.Printf("gorutine GetProduct start: %+v", cartItem.Sku)
+		logger.Debug(fmt.Sprintf("gorutine GetProduct start: %+v", cartItem.Sku))
+
 		err := d.limiter.Wait(ctx)
 		if err != nil {
 			return model.CartItem{}, err
 		}
 
-		log.Printf("gorutine GetProduct make request: %+v", cartItem.Sku)
+		logger.Debug(fmt.Sprintf("gorutine GetProduct make request: %+v", cartItem.Sku))
 		cartItem.Name, cartItem.Price, err = d.productService.GetProduct(ctx, cartItem.Sku)
 		if err != nil {
-			log.Printf("get error from productService: %+v", err)
+			logger.Debug(fmt.Sprintf("get error from productService: %+v", err))
 			return model.CartItem{}, errors.WithMessage(err, "wrong sku")
 		}
-		log.Printf("gorutine GetProduct finish: %+v", cartItem.Sku)
+		logger.Debug(fmt.Sprintf("gorutine GetProduct finish: %+v", cartItem.Sku))
 		return cartItem, nil
 	}
 
@@ -49,24 +52,25 @@ func (d *domain) ListCart(ctx context.Context, userID int64) ([]model.CartItem, 
 	go func() {
 		defer func() {
 			wg.Done()
-			log.Printf("closed gorutine add to JobChan")
+			logger.Debug("closed gorutine add to JobChan")
 		}()
-		log.Printf("total jobs %+v", len(userCart))
+
+		logger.Debug(fmt.Sprintf("total jobs %+v", len(userCart)))
 		for _, cartItem := range userCart {
 			select {
 			case <-ctx.Done():
-				log.Printf("while add job context Done and close JobChan")
+				logger.Debug("while add job context Done and close JobChan")
 				close(pool.JobChan)
 				return
 			default:
-				log.Printf("add job: %+v", cartItem.Sku)
+				logger.Debug(fmt.Sprintf("add job: %+v", cartItem.Sku))
 				pool.AddJob(workerpool.Job[model.CartItem, model.CartItem]{
 					Callback: callback,
 					Args:     cartItem,
 				})
 			}
 		}
-		log.Printf("close chain JobChan")
+		logger.Debug("close chain JobChan")
 		close(pool.JobChan)
 	}()
 
@@ -77,12 +81,12 @@ func (d *domain) ListCart(ctx context.Context, userID int64) ([]model.CartItem, 
 	go func() {
 		defer func() {
 			wg.Done()
-			log.Printf("closed gorutine read ResultChan")
+			logger.Debug("closed gorutine read ResultChan")
 		}()
 
-		log.Printf("start wait result from ResultChan")
+		logger.Debug("start wait result from ResultChan")
 		for cartItem := range pool.ResultChan {
-			log.Printf("received result: %+v", cartItem.Sku)
+			logger.Debug(fmt.Sprintf("received result: %+v", cartItem.Sku))
 			outputCart = append(outputCart, cartItem)
 		}
 	}()
@@ -94,9 +98,10 @@ func (d *domain) ListCart(ctx context.Context, userID int64) ([]model.CartItem, 
 		}
 	}
 
-	log.Printf("wait finish work in ListCart")
+	log.Printf("")
+	logger.Debug("wait finish work in ListCart")
 	wg.Wait()
 
-	log.Printf("return result from ListCart")
+	logger.Debug("return result from ListCart")
 	return outputCart, nil
 }

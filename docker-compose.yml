@@ -7,13 +7,15 @@ networks:
 services:
 
   checkout:
-    container_name: 'checkout-app'
+    container_name: "checkout-app"
     image: checkout
     build: ./checkout/
     environment:
       DATABASE_URL: postgres://postgres:secret@checkout-db:5432/checkout?sslmode=disable
+      JAEGER_AGENT_HOST: jaeger
     ports:
       - "50052:50052"
+      - "8082:8082"
     restart: unless-stopped
     networks:
       - route256
@@ -22,9 +24,10 @@ services:
       - 8.8.8.8
     depends_on:
       - checkout-db
+      - loms
 
   checkout-db:
-    container_name: 'checkout-db'
+    container_name: "checkout-db"
     image: postgres:15.1
     environment:
       POSTGRES_DB: checkout
@@ -46,15 +49,18 @@ services:
       - route256
 
   loms:
-    container_name: 'loms-app'
+    container_name: "loms-app"
     image: loms
     build: ./loms/
     environment:
       DATABASE_URL: postgres://postgres:secret@loms-db:5432/loms?sslmode=disable
       GRPC_PORT: 50051
       KAFKA_BROKERS: kafka1:29091,kafka2:29092,kafka3:29093
+      DEVELOPMENT_MODE: true
+      JAEGER: jaeger:6831
     ports:
       - "50051:50051"
+      - "8081:8081"
     restart: unless-stopped
     networks:
       - route256
@@ -72,7 +78,7 @@ services:
 
   loms-db:
     image: postgres:15.1
-    container_name: 'loms-db'
+    container_name: "loms-db"
     environment:
       POSTGRES_DB: loms
       POSTGRES_USER: postgres
@@ -93,7 +99,7 @@ services:
       - route256
 
   zookeeper:
-    container_name: 'zookeeper'
+    container_name: "zookeeper"
     image: confluentinc/cp-zookeeper:latest
     ports:
       - "2181:2181"
@@ -115,7 +121,7 @@ services:
       - route256
 
   kafka1:
-    container_name: 'kafka1'
+    container_name: "kafka1"
     image: confluentinc/cp-kafka:latest
     healthcheck:
       test: ps augwwx | egrep [S]upportedKafka
@@ -135,7 +141,7 @@ services:
       - route256
 
   kafka2:
-    container_name: 'kafka2'
+    container_name: "kafka2"
     image: confluentinc/cp-kafka:latest
     healthcheck:
       test: ps augwwx | egrep [S]upportedKafka
@@ -155,7 +161,7 @@ services:
       - route256
 
   kafka3:
-    container_name: 'kafka3'
+    container_name: "kafka3"
     image: confluentinc/cp-kafka:latest
     healthcheck:
       test: ps augwwx | egrep [S]upportedKafka
@@ -175,11 +181,14 @@ services:
       - route256
 
   notifications:
-    container_name: 'notifications-app'
+    container_name: "notifications-app"
     image: notifications
     build: ./notifications/
     environment:
       KAFKA_BROKERS: kafka1:29091,kafka2:29092,kafka3:29093
+      DEVELOPMENT_MODE: true
+    ports:
+      - "8083:8083"
     restart: unless-stopped
     networks:
       - route256
@@ -193,6 +202,41 @@ services:
       kafka3:
         condition: service_started
 
+  prometheus:
+    container_name: "prometheus"
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - route256
+
+  grafana:
+    container_name: "grafana"
+    image: grafana/grafana-oss
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - route256
+
+  jaeger:
+    container_name: "jaeger"
+    image: jaegertracing/all-in-one:1.18
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686" # web
+      - "14268:14268"
+      - "9411:9411"
+    networks:
+      - route256
+
 volumes:
   checkout-db-data:
   loms-db-data:
+  grafana-data:

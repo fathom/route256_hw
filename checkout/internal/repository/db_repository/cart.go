@@ -3,7 +3,8 @@ package db_repository
 import (
 	"context"
 	"errors"
-	"log"
+	"fmt"
+	"route256/checkout/internal/logger"
 	"route256/checkout/internal/model"
 	"route256/checkout/internal/repository/db_repository/schema"
 	"route256/checkout/internal/repository/db_repository/transactor"
@@ -59,7 +60,8 @@ func (r *cartRepository) AddToCart(ctx context.Context, userID int64, sku uint32
 		return multierr.Append(ErrCartRepository, err)
 	}
 
-	log.Printf("AddToCart Query: %v with %v", query, args)
+	logger.Debug(fmt.Sprintf("AddToCart Query: %v with %v", query, args))
+
 	_, err = db.Exec(ctx, query, args...)
 	if err != nil {
 		return multierr.Append(ErrCartRepository, err)
@@ -81,7 +83,8 @@ func (r *cartRepository) UpdateCountCart(ctx context.Context, userID int64, sku 
 		return multierr.Append(ErrCartRepository, err)
 	}
 
-	log.Printf("UpdateCountCart Query: %v with %v", query, args)
+	logger.Debug(fmt.Sprintf("UpdateCountCart Query: %v with %v", query, args))
+
 	_, err = db.Exec(ctx, query, args...)
 	if err != nil {
 		return multierr.Append(ErrCartRepository, err)

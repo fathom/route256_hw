@@ -3,7 +3,8 @@ package domain
 import (
 	"context"
 	"errors"
-	"log"
+	"fmt"
+	"route256/loms/internal/logger"
 	"route256/loms/internal/model"
 )
 
@@ -18,7 +19,7 @@ func (d *Domain) OrderPayed(ctx context.Context, orderId int64) error {
 		if err != nil {
 			return err
 		}
-		log.Printf("order %v mark as %v", orderId, model.Payed)
+		logger.Debug(fmt.Sprintf("order %v mark as %v", orderId, model.Payed))
 
 		reservations, err := d.WarehouseRepository.GetReservationByOrderId(ctxTX, orderId)
 		if err != nil {
@@ -45,13 +46,13 @@ func (d *Domain) OrderPayed(ctx context.Context, orderId int64) error {
 	})
 
 	if err != nil {
-		log.Println("pay order failed", err)
+		logger.Debug(fmt.Sprintf("pay order failed: %+v", err))
 		return ErrPayOrderFailed
 	}
 
 	err = d.OrderStatusSender.SendOrderStatus(orderId, model.Payed)
 	if err != nil {
-		log.Printf("OrderStatusSender: %+v", err)
+		logger.Debug(fmt.Sprintf("OrderStatusSender: %+v", err))
 		return err
 	}
 

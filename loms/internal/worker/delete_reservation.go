@@ -2,9 +2,10 @@ package worker
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"route256/libs/workerpool"
 	"route256/loms/internal/domain"
+	"route256/loms/internal/logger"
 	"route256/loms/internal/model"
 	"time"
 )
@@ -37,7 +38,7 @@ func NewDeleteReservationWorker(
 	// запускаем прослушивание канала с результатом и логируем
 	go func() {
 		for result := range DeleteReservationService.pool.ResultChan {
-			log.Printf("received result: %+v", result)
+			logger.Info(fmt.Sprintf("received result: %+v", result))
 		}
 	}()
 
@@ -47,7 +48,7 @@ func NewDeleteReservationWorker(
 // AddDelayJob Добавление отложенной задачи на проверку оплаты заказа
 func (w *DeleteReservationWorker) AddDelayJob(job model.JobDeleteReservation) {
 	time.AfterFunc(time.Minute*10, func() {
-		log.Printf("add job to JobChan: %+v", job.OrderId)
+		logger.Debug(fmt.Sprintf("add job to JobChan: %+v", job.OrderId))
 		w.pool.JobChan <- workerpool.Job[model.JobDeleteReservation, bool]{
 			Callback: w.doWork,
 			Args:     job,
@@ -58,7 +59,7 @@ func (w *DeleteReservationWorker) AddDelayJob(job model.JobDeleteReservation) {
 // Выполняет проверку в каком статусе заказ, если он всё еще ожидает оплату, то отменяет его и
 // удаляет резервы
 func (w *DeleteReservationWorker) doWork(job model.JobDeleteReservation) (bool, error) {
-	log.Printf("check order status %v", job.OrderId)
+	logger.Debug(fmt.Sprintf("check order status %v", job.OrderId))
 	order, err := w.ordersRepository.GetOrder(w.ctx, job.OrderId)
 	if err != nil {
 		return false, err
@@ -70,7 +71,7 @@ func (w *DeleteReservationWorker) doWork(job model.JobDeleteReservation) (bool, 
 			return false, err
 		}
 
-		log.Printf("order %v mark as %v", job.OrderId, model.Cancelled)
+		logger.Debug(fmt.Sprintf("order %v mark as %v", job.OrderId, model.Cancelled))
 
 		err = w.warehouseRepository.DeleteReservation(w.ctx, job.OrderId)
 		if err != nil {

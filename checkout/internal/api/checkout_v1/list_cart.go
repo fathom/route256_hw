@@ -2,7 +2,8 @@ package checkout_v1
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"route256/checkout/internal/logger"
 	desc "route256/checkout/pkg/checkout_v1"
 )
 
@@ -11,7 +12,7 @@ import (
 // времени получать из ProductService)
 
 func (h *Handlers) ListCart(ctx context.Context, request *desc.ListCartRequest) (*desc.ListCartResponse, error) {
-	log.Printf("listCart: %+v", request)
+	logger.Debug(fmt.Sprintf("listCart: %+v", request))
 
 	cartItems, err := h.businessLogic.ListCart(ctx, request.GetUser())
 	if err != nil {
@@ -27,7 +28,7 @@ func (h *Handlers) ListCart(ctx context.Context, request *desc.ListCartRequest) 
 			Name:  item.Name,
 			Price: item.Price,
 		})
-		response.TotalPrice += item.Price
+		response.TotalPrice += item.Price * item.Count
 	}
 
 	return response, nil

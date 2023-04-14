@@ -2,8 +2,9 @@ package loms_v1
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"route256/loms/internal/converter"
+	"route256/loms/internal/logger"
 	desc "route256/loms/pkg/loms_v1"
 )
 
@@ -12,7 +13,7 @@ import (
 // Товары при этом нужно зарезервировать на складе.
 
 func (h *Handlers) CreateOrder(ctx context.Context, request *desc.CreateOrderRequest) (*desc.CreateOrderResponse, error) {
-	log.Printf("createOrder: %+v", request)
+	logger.Debug(fmt.Sprintf("createOrder: %+v", request))
 
 	orderID, err := h.businessLogic.CreateOrder(ctx, request.GetUser(), converter.ToOrderItemListDomain(request.GetItems()))
 	if err != nil {

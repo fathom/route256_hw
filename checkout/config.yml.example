@@ -1,7 +1,9 @@
+development_mode: true
 token: testtoken
 grpc_port: 50052
 database_url: postgres://postgres:secret@checkout-db:5432/checkout?sslmode=disable
 count_workers: 5
+jaeger: jaeger:6831
 services:
   loms: loms:50051
   product: route256.pavl.uk:8082
